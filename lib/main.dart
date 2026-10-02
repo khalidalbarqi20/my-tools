@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'storage/prefs.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'navigation/shell.dart';
 import 'theme/app_theme.dart';
 
-void main() => runApp(const MyToolsApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Prefs.init();
+  runApp(const MyToolsApp());
+}
 
 class MyToolsApp extends StatelessWidget {
   const MyToolsApp({super.key});

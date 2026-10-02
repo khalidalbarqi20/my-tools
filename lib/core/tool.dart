@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'search.dart';
 
 class Tool {
   final String id, nameAr, nameEn, category;
@@ -15,11 +16,5 @@ class Tool {
     required this.builder,
   });
 
-  bool matches(String q) {
-    final s = q.trim().toLowerCase();
-    if (s.isEmpty) return true;
-    return nameAr.contains(s) ||
-        nameEn.toLowerCase().contains(s) ||
-        keywords.any((k) => k.toLowerCase().contains(s));
-  }
+  bool matches(String q) => fuzzyMatch(q, [nameAr, nameEn, ...keywords]);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../features/home/favorites_page.dart';
 import '../features/home/categories_page.dart';
 import '../features/home/home_page.dart';
 
@@ -17,7 +18,7 @@ class _ShellState extends State<Shell> {
       body: IndexedStack(index: _i, children: const [
         HomePage(),
         CategoriesPage(),
-        _soon,
+        FavoritesPage(),
         _soon,
       ]),
       bottomNavigationBar: NavigationBar(

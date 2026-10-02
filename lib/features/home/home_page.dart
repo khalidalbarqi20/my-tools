@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recents_section.dart';
 import '../../core/categories.dart';
 import '../../core/registry.dart';
 import '../../core/tool_tile.dart';
@@ -80,6 +81,7 @@ class _HomePageState extends State<HomePage> {
             _title('الأقسام'),
             _grid(),
             const SizedBox(height: 20),
+            const RecentsSection(),
             _title('كل الأدوات'),
             for (final x in allTools) ToolTile(tool: x),
           ],
