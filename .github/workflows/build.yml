@@ -2,8 +2,15 @@ name: build
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
 jobs:
-  apk:
+  build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -15,17 +22,29 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate android scaffold
+      - name: Generate scaffolds
         run: |
-          [ -d android ] || {
-            flutter create /tmp/scaf --platforms=android --project-name my_tools --org com.khalid.mytools
-            cp -r /tmp/scaf/android .
-          }
+          flutter create /tmp/scaf --platforms=android,web --project-name my_tools --org com.khalid.mytools
+          [ -d android ] || cp -r /tmp/scaf/android .
+          [ -d web ] || cp -r /tmp/scaf/web .
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
+      - run: flutter build web --release --base-href /my-tools/
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
           name: my-tools-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
