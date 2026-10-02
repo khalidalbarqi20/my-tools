@@ -3,7 +3,7 @@ import 'package:my_tools/core/registry.dart';
 
 void main() {
   test('البحث بالعربي والإنجليزي والمرادفات', () {
-    final t = allTools.first;
+    final t = allTools.firstWhere((x) => x.id == 'discount');
     expect(t.matches('خصم'), true);
     expect(t.matches('تخفيض'), true);
     expect(t.matches('DISCOUNT'), true);

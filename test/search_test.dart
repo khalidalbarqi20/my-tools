@@ -8,7 +8,7 @@ void main() {
     expect(norm('أإآ'), 'ااا');
   });
   test('بحث مرن', () {
-    final t = allTools.first;
+    final t = allTools.firstWhere((x) => x.id == 'discount');
     expect(t.matches('خصوم'), true);
     expect(t.matches('discont'), true);
     expect(t.matches('حاسبة خصم'), true);
