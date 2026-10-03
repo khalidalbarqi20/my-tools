@@ -50,10 +50,10 @@ class CategoryCard extends StatelessWidget {
                 children: [
                   Text(category.nameAr,
                       style: t.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800, color: tone.fg)),
+                          fontWeight: FontWeight.w800, color: tone.text)),
                   Text(toolsCount(count),
                       style: t.textTheme.bodySmall
-                          ?.copyWith(color: tone.fg.withValues(alpha: 0.75))),
+                          ?.copyWith(color: tone.text.withValues(alpha: 0.75))),
                 ],
               ),
             ],

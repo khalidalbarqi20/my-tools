@@ -14,23 +14,26 @@ class MyToolsApp extends StatelessWidget {
   const MyToolsApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: Prefs.themeMode,
-      builder: (context, mode, child) => MaterialApp(
-        title: 'أدواتي اليومية',
-        debugShowCheckedModeBanner: false,
-        locale: const Locale('ar'),
-        supportedLocales: const [Locale('ar'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: mode,
-        home: const Shell(),
-      ),
+    return ListenableBuilder(
+      listenable: Listenable.merge([Prefs.themeMode, Prefs.colors]),
+      builder: (context, child) {
+        final cols = Prefs.colors.value;
+        return MaterialApp(
+          title: 'أدواتي اليومية',
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('ar'),
+          supportedLocales: const [Locale('ar'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: buildTheme(Brightness.light, cols),
+          darkTheme: buildTheme(Brightness.dark, cols),
+          themeMode: Prefs.themeMode.value,
+          home: const Shell(),
+        );
+      },
     );
   }
 }
