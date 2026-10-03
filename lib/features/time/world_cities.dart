@@ -1,0 +1,56 @@
+/// (معرّف المنطقة الزمنية، الاسم بالعربية)
+const worldCities = <(String, String)>[
+  ('Asia/Riyadh', 'الرياض'),
+  ('Asia/Dubai', 'دبي'),
+  ('Asia/Qatar', 'الدوحة'),
+  ('Asia/Kuwait', 'الكويت'),
+  ('Asia/Bahrain', 'المنامة'),
+  ('Asia/Muscat', 'مسقط'),
+  ('Asia/Baghdad', 'بغداد'),
+  ('Asia/Amman', 'عمّان'),
+  ('Asia/Damascus', 'دمشق'),
+  ('Asia/Beirut', 'بيروت'),
+  ('Asia/Jerusalem', 'القدس'),
+  ('Africa/Cairo', 'القاهرة'),
+  ('Africa/Khartoum', 'الخرطوم'),
+  ('Africa/Tripoli', 'طرابلس'),
+  ('Africa/Tunis', 'تونس'),
+  ('Africa/Algiers', 'الجزائر'),
+  ('Africa/Casablanca', 'الرباط'),
+  ('Europe/Istanbul', 'إسطنبول'),
+  ('Europe/London', 'لندن'),
+  ('Europe/Paris', 'باريس'),
+  ('Europe/Berlin', 'برلين'),
+  ('Europe/Madrid', 'مدريد'),
+  ('Europe/Rome', 'روما'),
+  ('Europe/Moscow', 'موسكو'),
+  ('Asia/Tehran', 'طهران'),
+  ('Asia/Karachi', 'كراتشي'),
+  ('Asia/Kolkata', 'نيودلهي'),
+  ('Asia/Dhaka', 'دكا'),
+  ('Asia/Jakarta', 'جاكرتا'),
+  ('Asia/Kuala_Lumpur', 'كوالالمبور'),
+  ('Asia/Singapore', 'سنغافورة'),
+  ('Asia/Shanghai', 'بكين'),
+  ('Asia/Tokyo', 'طوكيو'),
+  ('Asia/Seoul', 'سيول'),
+  ('Australia/Sydney', 'سيدني'),
+  ('Pacific/Auckland', 'أوكلاند'),
+  ('America/New_York', 'نيويورك'),
+  ('America/Chicago', 'شيكاغو'),
+  ('America/Denver', 'دنفر'),
+  ('America/Los_Angeles', 'لوس أنجلوس'),
+  ('America/Toronto', 'تورنتو'),
+  ('America/Mexico_City', 'مكسيكو سيتي'),
+  ('America/Sao_Paulo', 'ساو باولو'),
+  ('Africa/Johannesburg', 'جوهانسبرغ'),
+  ('Africa/Nairobi', 'نيروبي'),
+  ('Africa/Lagos', 'لاغوس'),
+];
+
+String cityName(String id) {
+  for (final c in worldCities) {
+    if (c.$1 == id) return c.$2;
+  }
+  return id;
+}
