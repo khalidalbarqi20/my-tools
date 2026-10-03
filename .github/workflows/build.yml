@@ -29,6 +29,8 @@ jobs:
           flutter create /tmp/scaf --platforms=android,web --project-name my_tools --org com.khalid.mytools
           [ -d android ] || cp -r /tmp/scaf/android .
           [ -d web ] || cp -r /tmp/scaf/web .
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.CAMERA' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-feature android:name="android.hardware.camera" android:required="false"/>#' $M
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
