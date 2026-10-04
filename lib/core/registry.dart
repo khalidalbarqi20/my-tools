@@ -1,5 +1,6 @@
 import '../features/calculator/calc_tools.dart';
 import '../features/converters/converter_tools.dart';
+import '../features/currency/currency_tools.dart';
 import '../features/image/image_tools.dart';
 import '../features/pdf/pdf_tools.dart';
 import '../features/qr/qr_tools.dart';
@@ -11,6 +12,7 @@ import 'tool.dart';
 final List<Tool> allTools = [
   ...calcTools,
   ...converterTools,
+  ...currencyTools,
   ...pdfTools,
   ...imageTools,
   ...qrTools,

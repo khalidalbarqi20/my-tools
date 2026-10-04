@@ -10,6 +10,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  http: ^1.2.0
   shared_preferences: ^2.3.0
   pdfrx: ^2.6.5
   pdf: ^3.11.0
