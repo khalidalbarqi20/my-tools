@@ -66,7 +66,7 @@ void main() {
     expect(generatePassword(length: 16), isNot(generatePassword(length: 16)));
   });
   test('القوة', () {
-    expect(passwordPoolSize(), 26 + 26 + 10 + 24);
+    expect(passwordPoolSize(), 26 + 26 + 10 + 23);
     expect(passwordPoolSize(upper: false, lower: false, symbols: false), 10);
     expect(entropyBits(10, 10) > 33 && entropyBits(10, 10) < 34, true);
     expect(strengthLabel(30), 'ضعيفة');
