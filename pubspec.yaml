@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
   intl: any
   http: ^1.2.0
-  device_info_plus: ^12.3.0
+  device_info_plus: ^13.3.0
   battery_plus: ^7.0.0
   sensors_plus: ^6.0.0
   torch_light: ^1.1.0
