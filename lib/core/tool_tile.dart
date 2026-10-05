@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import '../ads/ad_shell.dart';
+import '../ads/ads.dart';
 import '../storage/prefs.dart';
 import '../theme/app_theme.dart';
 import 'tool.dart';
 
 void openTool(BuildContext context, Tool tool) {
   Prefs.addRecent(tool.id);
-  Navigator.push(context, MaterialPageRoute(builder: tool.builder));
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+        builder: (c) => AdShell(toolId: tool.id, child: tool.builder(c))),
+  ).then((_) => Ads.onToolClosed(tool.id));
 }
 
 class ToolTile extends StatelessWidget {

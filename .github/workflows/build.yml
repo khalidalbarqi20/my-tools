@@ -25,17 +25,20 @@ jobs:
           channel: stable
           cache: true
       - name: Generate scaffolds
+        env:
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713' }}
         run: |
           flutter create /tmp/scaf --platforms=android,web --project-name my_tools --org com.khalid.mytools
           [ -d android ] || cp -r /tmp/scaf/android .
           [ -d web ] || cp -r /tmp/scaf/web .
           M=android/app/src/main/AndroidManifest.xml
-          grep -q 'android.permission.INTERNET' $M || sed -i 's#<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">#&\n    <uses-permission android:name=\"android.permission.INTERNET\"/>#' $M
+          grep -q 'android.permission.INTERNET' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.INTERNET"/>#' $M
           grep -q 'android.permission.CAMERA' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-feature android:name="android.hardware.camera" android:required="false"/>#' $M
+          grep -q 'gms.ads.APPLICATION_ID' $M || sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/>\n    </application>#" $M
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-      - run: flutter build apk --release
+      - run: flutter build apk --release --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }}
       - uses: actions/upload-artifact@v4
         with:
           name: my-tools-apk

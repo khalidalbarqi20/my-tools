@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'ads/ads.dart';
 import 'navigation/shell.dart';
 import 'storage/prefs.dart';
 import 'theme/app_theme.dart';
@@ -8,6 +9,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs.init();
   runApp(const MyToolsApp());
+  Ads.init(); // لا ننتظرها: لا نؤخر فتح التطبيق
 }
 
 class MyToolsApp extends StatelessWidget {
