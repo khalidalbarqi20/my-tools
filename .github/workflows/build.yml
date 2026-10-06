@@ -35,6 +35,17 @@ jobs:
           grep -q 'android.permission.INTERNET' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.INTERNET"/>#' $M
           grep -q 'android.permission.CAMERA' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-feature android:name="android.hardware.camera" android:required="false"/>#' $M
           grep -q 'gms.ads.APPLICATION_ID' $M || sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/>\n    </application>#" $M
+          printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' > android/app/proguard-rules.pro
+          G=android/app/build.gradle.kts; [ -f $G ] || G=android/app/build.gradle
+          if ! grep -q 'proguard-rules.pro' $G; then
+            if [ "$G" = android/app/build.gradle.kts ]; then
+              sed -i 's#^\( *\)release {#&\n\1    proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")#' $G
+            else
+              sed -i "s#^\( *\)release {#&\n\1    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'#" $G
+            fi
+          fi
+          grep -q 'strictFullModeForKeepRules' android/gradle.properties || echo 'android.r8.strictFullModeForKeepRules=false' >> android/gradle.properties
+          grep -n 'proguard' $G || echo "WARNING: proguard line not added to $G"
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
