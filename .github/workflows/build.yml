@@ -48,8 +48,30 @@ jobs:
           grep -q 'strictFullModeForKeepRules' android/gradle.properties || echo 'android.r8.strictFullModeForKeepRules=false' >> android/gradle.properties
           grep -n 'proguard' $G || echo "WARNING: proguard line not added to $G"
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
-      - run: flutter test
+      - name: Analyze
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1
+          code=$?
+          cat analyze.txt
+          if [ $code -ne 0 ]; then
+            msg=$(grep -E '(error|warning) •' analyze.txt | head -12 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            [ -n "$msg" ] || msg=$(tail -12 analyze.txt | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=flutter analyze::$msg"
+          fi
+          exit $code
+      - name: Test
+        run: |
+          set +e
+          flutter test --reporter expanded > test.txt 2>&1
+          code=$?
+          tail -60 test.txt
+          if [ $code -ne 0 ]; then
+            msg=$(grep -n -E '\[E\]|Expected:|Actual:|Which:|Error:|Failed to load|error •' test.txt | head -14 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            [ -n "$msg" ] || msg=$(tail -15 test.txt | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=flutter test::$msg"
+          fi
+          exit $code
       - run: flutter build apk --release --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }} --dart-define=REMOTE_CONFIG_URL=${{ vars.REMOTE_CONFIG_URL }}
       - uses: actions/upload-artifact@v4
         with:
