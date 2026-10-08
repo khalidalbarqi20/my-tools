@@ -50,7 +50,7 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-      - run: flutter build apk --release --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }}
+      - run: flutter build apk --release --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }} --dart-define=REMOTE_CONFIG_URL=${{ vars.REMOTE_CONFIG_URL }}
       - uses: actions/upload-artifact@v4
         with:
           name: my-tools-apk

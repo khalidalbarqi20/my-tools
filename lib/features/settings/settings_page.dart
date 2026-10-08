@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../billing/billing.dart';
+import '../../billing/remove_ads_page.dart';
 import '../../storage/prefs.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -246,6 +248,20 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ]),
+          _Group(title: 'الدعم', children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: Billing.adFree,
+              builder: (context, free, _) => ListTile(
+                leading: Icon(free ? Icons.check_circle_outline : Icons.block),
+                title: const Text('إزالة الإعلانات'),
+                subtitle: Text(free ? 'مفعّلة، شكرًا لدعمك' : 'اشترك لإخفاء كل الإعلانات'),
+                trailing: const Icon(Icons.chevron_left),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RemoveAdsPage())),
               ),
             ),
           ]),

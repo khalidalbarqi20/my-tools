@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../billing/billing.dart';
+import '../remote/remote_store.dart';
 import 'ad_ids.dart';
 import 'ad_policy.dart';
 
@@ -12,7 +14,7 @@ class Ads {
   static InterstitialPolicy? _policy;
 
   static Future<void> init() async {
-    if (_ready || !Platform.isAndroid) return;
+    if (_ready || !Platform.isAndroid || Billing.adFree.value) return;
     try {
       await _consent();
       final can = await ConsentInformation.instance.canRequestAds();
@@ -57,7 +59,16 @@ class Ads {
   /// يُستدعى عند رجوع المستخدم من أداة: نقطة طبيعية لإعلان بيني نادر.
   static void onToolClosed(String toolId) {
     final p = _policy;
-    if (!_ready || p == null || noAdTools.contains(toolId)) return;
+    if (!_ready || p == null || Billing.adFree.value || noAdTools.contains(toolId)) {
+      return;
+    }
+    final r = RemoteStore.config.value;
+    if (r != null) {
+      if (!r.ads.interstitial || r.noAdTools.contains(toolId)) return;
+      p.everyN = r.ads.everyN;
+      p.minGap = Duration(minutes: r.ads.minGapMin);
+      p.warmup = Duration(seconds: r.ads.warmupSec);
+    }
     p.registerFinish();
     final now = DateTime.now();
     if (!p.due(now)) return;

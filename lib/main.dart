@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'ads/ads.dart';
+import 'billing/billing.dart';
 import 'navigation/shell.dart';
+import 'remote/remote_gate.dart';
+import 'remote/remote_store.dart';
 import 'storage/prefs.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs.init();
+  await RemoteStore.loadCache();
   runApp(const MyToolsApp());
-  Ads.init(); // لا ننتظرها: لا نؤخر فتح التطبيق
+  RemoteStore.refresh(); // في الخلفية
+  Billing.init().then((_) => Ads.init()); // لا ننتظرها: لا نؤخر فتح التطبيق
 }
 
 class MyToolsApp extends StatelessWidget {
@@ -33,7 +38,7 @@ class MyToolsApp extends StatelessWidget {
           theme: buildTheme(Brightness.light, cols),
           darkTheme: buildTheme(Brightness.dark, cols),
           themeMode: Prefs.themeMode.value,
-          home: const Shell(),
+          home: const RemoteGate(child: Shell()),
         );
       },
     );

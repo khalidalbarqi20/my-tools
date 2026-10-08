@@ -16,6 +16,7 @@ dependencies:
   sensors_plus: ^6.0.0
   torch_light: ^1.1.0
   google_mobile_ads: ^9.1.0
+  in_app_purchase: ^3.3.0
   shared_preferences: ^2.3.0
   pdfrx: ^2.6.5
   pdf: ^3.11.0

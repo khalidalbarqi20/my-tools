@@ -10,8 +10,8 @@ const noAdTools = <String>{
 /// وبعد فترة تهدئة من بداية التطبيق، وبفاصل زمني أدنى بين إعلانين.
 class InterstitialPolicy {
   final DateTime start;
-  final int everyN;
-  final Duration minGap, warmup;
+  int everyN;
+  Duration minGap, warmup;
   InterstitialPolicy({
     required this.start,
     this.everyN = 5,
