@@ -280,7 +280,7 @@ String statsText(String input) {
   final median = n.isOdd ? sorted[n ~/ 2] : (sorted[n ~/ 2 - 1] + sorted[n ~/ 2]) / 2;
   final freq = <double, int>{};
   for (final x in xs) {
-    freq[x] = (freq[x] ?? 0.0) + 1;
+    freq[x] = (freq[x] ?? 0) + 1;
   }
   final top = freq.values.reduce(max);
   final modes = top == 1 ? <double>[] : (freq.entries.where((e) => e.value == top).map((e) => e.key).toList()..sort());

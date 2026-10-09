@@ -31,10 +31,14 @@ Tool _calc({
 final List<Tool> calcTools = [
   Tool(
     id: 'calculator',
-    nameAr: 'حاسبة عادية',
+    nameAr: 'الحاسبة (عادية وعلمية)',
     nameEn: 'Calculator',
     category: 'calc',
-    keywords: ['آلة حاسبة', 'جمع', 'طرح', 'ضرب', 'قسمة', 'calculator', 'calc'],
+    keywords: [
+      'آلة حاسبة', 'جمع', 'طرح', 'ضرب', 'قسمة', 'calculator', 'calc',
+      'علمية', 'حاسبة علمية', 'scientific', 'sin', 'cos', 'tan', 'log', 'ln',
+      'جذر', 'جيب', 'جتا', 'ظل', 'لوغاريتم', 'اس', 'مضروب', 'factorial',
+    ],
     icon: Icons.calculate,
     builder: (_) => const CalculatorPage(),
   ),

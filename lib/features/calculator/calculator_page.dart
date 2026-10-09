@@ -11,6 +11,14 @@ class CalculatorPage extends StatefulWidget {
 class _CalculatorPageState extends State<CalculatorPage> {
   String _e = '';
   String _msg = '';
+  bool _sci = false;
+  bool _deg = true;
+  final List<(String, String)> _hist = []; // (العملية، النتيجة)
+  static const _sciRows = [
+    ['sin', 'cos', 'tan', 'π'],
+    ['ln', 'log', '√', '^'],
+    ['x²', 'x!', 'e', 'DEG'],
+  ];
   static const _rows = [
     ['C', '(', ')', '⌫'],
     ['7', '8', '9', '÷'],
@@ -21,7 +29,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   String get _preview {
     if (_e.isEmpty) return '';
-    final v = evalExpr(_e);
+    final v = evalExprWith(_e, degrees: _deg);
     if (v == null) return '';
     final s = fmt(v, 10);
     return s == _e ? '' : s;
@@ -35,21 +43,67 @@ class _CalculatorPageState extends State<CalculatorPage> {
           if (_e.isNotEmpty) _e = _e.substring(0, _e.length - 1);
         } else if (k == '=') {
           if (_e.isEmpty) return;
-          final v = evalExpr(_e);
+          final v = evalExprWith(_e, degrees: _deg);
           if (v == null) {
             _msg = 'عملية غير صحيحة';
           } else {
-            _e = fmt(v, 10);
+            final r = fmt(v, 10);
+            _hist.add((_e, r));
+            if (_hist.length > 30) _hist.removeAt(0);
+            _e = r;
           }
+        } else if (k == 'DEG') {
+          _deg = !_deg;
         } else {
-          _e += k;
+          _e += _ins(k);
         }
       });
+
+  String _ins(String k) {
+    switch (k) {
+      case 'sin':
+      case 'cos':
+      case 'tan':
+      case 'ln':
+      case 'log':
+      case '√':
+        return '$k(';
+      case 'x²':
+        return '^2';
+      case 'x!':
+        return '!';
+      default:
+        return k;
+    }
+  }
+
+  void _showHistory() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => _hist.isEmpty
+          ? const SizedBox(
+              height: 160, child: Center(child: Text('لا توجد عمليات بعد')))
+          : ListView(children: [
+              for (final h in _hist.reversed)
+                ListTile(
+                  title: Directionality(
+                      textDirection: TextDirection.ltr, child: Text(h.$1)),
+                  subtitle: Directionality(
+                      textDirection: TextDirection.ltr, child: Text('= ${h.$2}')),
+                  onTap: () {
+                    setState(() => _e = h.$2);
+                    Navigator.pop(ctx);
+                  },
+                ),
+            ]),
+    );
+  }
 
   Widget _key(String k) {
     final style = FilledButton.styleFrom(
         minimumSize: Size.zero, padding: EdgeInsets.zero);
-    final label = Text(k, style: const TextStyle(fontSize: 24));
+    final label = Text(k == 'DEG' ? (_deg ? 'DEG' : 'RAD') : k,
+        style: TextStyle(fontSize: k.length > 1 ? 17 : 24));
     return '÷×−+'.contains(k)
         ? FilledButton(onPressed: () => _tap(k), style: style, child: label)
         : FilledButton.tonal(
@@ -61,7 +115,19 @@ class _CalculatorPageState extends State<CalculatorPage> {
     final t = Theme.of(context);
     final hasMsg = _msg.isNotEmpty;
     return Scaffold(
-      appBar: AppBar(title: const Text('حاسبة عادية')),
+      appBar: AppBar(
+        title: Text(_sci ? 'حاسبة علمية' : 'حاسبة عادية'),
+        actions: [
+          IconButton(
+              tooltip: 'سجل العمليات',
+              icon: const Icon(Icons.history),
+              onPressed: _showHistory),
+          IconButton(
+              tooltip: _sci ? 'حاسبة عادية' : 'حاسبة علمية',
+              icon: Icon(_sci ? Icons.dialpad : Icons.functions),
+              onPressed: () => setState(() => _sci = !_sci)),
+        ],
+      ),
       body: Directionality(
         textDirection: TextDirection.ltr,
         child: SafeArea(
@@ -91,11 +157,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
               ),
             ),
             Expanded(
-              flex: 5,
+              flex: _sci ? 8 : 5,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(children: [
-                  for (final row in _rows)
+                  for (final row in [if (_sci) ..._sciRows, ..._rows])
                     Expanded(
                       child: Row(children: [
                         for (final k in row)

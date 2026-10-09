@@ -3,6 +3,7 @@ import '../features/converters/converter_tools.dart';
 import '../features/currency/currency_tools.dart';
 import '../features/device/device_tools.dart';
 import '../features/extras/extras_tools.dart';
+import '../features/math/math_tools.dart';
 import '../features/more/more_tools.dart';
 import '../features/image/image_tools.dart';
 import '../features/pdf/pdf_tools.dart';
@@ -28,6 +29,7 @@ final List<Tool> _baseTools = [
   ...deviceTools,
   ...extrasTools,
   ...moreTools,
+  ...mathTools,
   ...randomTools,
 ];
 

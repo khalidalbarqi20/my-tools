@@ -11,6 +11,7 @@ class ToolCategory {
 
 const categories = [
   ToolCategory('calc', 'الحسابات', 'Calculators', Icons.calculate_outlined),
+  ToolCategory('math', 'الرياضيات', 'Math', Icons.functions),
   ToolCategory('convert', 'التحويلات', 'Converters', Icons.swap_horiz),
   ToolCategory('pdf', 'PDF', 'PDF', Icons.picture_as_pdf_outlined),
   ToolCategory('image', 'الصور', 'Images', Icons.image_outlined),
@@ -52,6 +53,7 @@ const _iconKeys = <String, IconData>{
   'settings': Icons.settings_outlined,
   'geo': Icons.square_foot,
   'car': Icons.directions_car_outlined,
+  'math': Icons.functions,
   'apps': Icons.apps,
 };
 
