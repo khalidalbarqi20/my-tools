@@ -1,4 +1,5 @@
 import 'package:qr/qr.dart';
+import '../../core/num_parse.dart';
 
 enum QrKind { url, wifi, email, phone, sms, contact, text }
 
@@ -353,6 +354,15 @@ String buildWifi(
 }
 
 String buildPhone(String n) => 'tel:${_phoneDigits(n)}';
+
+/// موقع جغرافي بصيغة geo: تفتحها خرائط الجهاز.
+String buildGeo(String lat, String lon) {
+  final a = parseNum(lat), b = parseNum(lon);
+  if (a == null || b == null || a.abs() > 90 || b.abs() > 180) {
+    throw const FormatException('اكتب إحداثيات صحيحة (العرض بين -90 و90، والطول بين -180 و180)');
+  }
+  return 'geo:${a.toStringAsFixed(6)},${b.toStringAsFixed(6)}';
+}
 
 String buildSms(String n, {String body = ''}) =>
     'SMSTO:${_phoneDigits(n)}:${body.trim()}';

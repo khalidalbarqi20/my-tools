@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/tool.dart';
 import 'device_pages.dart';
 import 'sensor_pages.dart';
+import 'sensor_test_page.dart';
 
 Tool _t(String id, String ar, String en, List<String> kw, IconData icon,
         WidgetBuilder b) =>
@@ -28,6 +29,9 @@ final List<Tool> deviceTools = [
   _t('dev_level', 'الميزان', 'Level',
       ['ميزان', 'مستوى', 'ميزان مائي', 'فقاعة', 'استواء', 'level', 'spirit level', 'bubble', 'tilt'],
       Icons.straighten, (_) => const LevelPage()),
+  _t('dev_sensors', 'اختبار المستشعرات', 'Sensors Test',
+      ['مستشعر', 'حساس', 'تسارع', 'جيروسكوب', 'مغناطيس', 'sensor', 'accelerometer', 'gyroscope', 'magnetometer'],
+      Icons.sensors, (_) => const SensorTestPage()),
   _t('dev_screen', 'اختبار الشاشة', 'Screen Test',
       ['شاشة', 'ألوان', 'بكسل', 'بقع', 'dead pixel', 'display', 'colors'],
       Icons.tv_outlined, (_) => const ScreenTestPage()),

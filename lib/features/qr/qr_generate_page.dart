@@ -3,7 +3,7 @@ import '../pdf/pdf_common.dart' show OutFile, saveOut, shareOut;
 import 'qr_logic.dart';
 import 'qr_render.dart';
 
-enum _T { url, text, wifi, phone, email, sms, contact }
+enum _T { url, text, wifi, phone, email, sms, contact, location }
 
 const _titles = {
   _T.url: 'رابط',
@@ -13,6 +13,7 @@ const _titles = {
   _T.email: 'بريد',
   _T.sms: 'رسالة',
   _T.contact: 'جهة اتصال',
+  _T.location: 'موقع',
 };
 
 class QrGeneratePage extends StatefulWidget {
@@ -61,6 +62,10 @@ class _QrGeneratePageState extends State<QrGeneratePage> {
             ('c', 'البريد (اختياري)', false),
             ('d', 'الجهة (اختياري)', false),
           ],
+        _T.location => [
+            ('a', 'خط العرض (مثال: 24.7136)', false),
+            ('b', 'خط الطول (مثال: 46.6753)', false),
+          ],
       };
 
   String? _content() {
@@ -75,6 +80,7 @@ class _QrGeneratePageState extends State<QrGeneratePage> {
         _T.sms => buildSms(v('a'), body: v('b')),
         _T.contact =>
           buildContact(name: v('a'), phone: v('b'), email: v('c'), org: v('d')),
+        _T.location => buildGeo(v('a'), v('b')),
       };
     } on FormatException {
       return null;

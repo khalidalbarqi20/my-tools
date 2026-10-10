@@ -1,5 +1,6 @@
 import '../features/calculator/calc_tools.dart';
 import '../features/converters/converter_tools.dart';
+import '../features/arabic/arabic_tools.dart';
 import '../features/currency/currency_tools.dart';
 import '../features/device/device_tools.dart';
 import '../features/extras/extras_tools.dart';
@@ -30,6 +31,7 @@ final List<Tool> _baseTools = [
   ...extrasTools,
   ...moreTools,
   ...mathTools,
+  ...arabicTools,
   ...randomTools,
 ];
 
