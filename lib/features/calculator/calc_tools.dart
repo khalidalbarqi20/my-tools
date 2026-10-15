@@ -95,10 +95,12 @@ final List<Tool> calcTools = [
   ),
   _calc(
     id: 'age', ar: 'حاسبة العمر', en: 'Age Calculator',
-    kw: ['عمر', 'ميلاد', 'تاريخ', 'age', 'birthday'],
+    kw: ['عمر', 'ميلاد', 'تاريخ', 'هجري', 'ميلادي', 'age', 'birthday', 'hijri'],
     icon: Icons.cake_outlined, fn: age,
+    note: 'تُعرض النتيجة بالتقويمين الميلادي والهجري (أم القرى) معًا. الهجري من 1318 إلى 1500 هـ.',
     fields: [
-      CalcField('سنة الميلاد (مثال 1995)'),
+      CalcField('تقويم تاريخ الميلاد', initial: 'g', options: [('g', 'ميلادي'), ('h', 'هجري')]),
+      CalcField('سنة الميلاد (مثال 1995 أو 1415 هجري)'),
       CalcField('شهر الميلاد (1-12)'),
       CalcField('يوم الميلاد'),
     ],

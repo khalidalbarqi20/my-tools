@@ -6,7 +6,9 @@ class CalcField {
   final String label;
   final String? initial;
   final bool text;
-  const CalcField(this.label, {this.initial, this.text = false});
+  /// إن وُجدت تظهر كأزرار اختيار بدل حقل كتابة (القيمة، النص).
+  final List<(String, String)>? options;
+  const CalcField(this.label, {this.initial, this.text = false, this.options});
 }
 
 class CalcPage extends StatefulWidget {
@@ -86,7 +88,18 @@ class _CalcPageState extends State<CalcPage> {
         padding: const EdgeInsets.all(16),
         children: [
           for (var i = 0; i < widget.fields.length; i++) ...[
-            TextField(
+            if (widget.fields[i].options != null)
+              SegmentedButton<String>(
+                segments: [
+                  for (final o in widget.fields[i].options!)
+                    ButtonSegment(value: o.$1, label: Text(o.$2)),
+                ],
+                selected: {_c[i].text},
+                onSelectionChanged: (v) =>
+                    setState(() => _c[i].text = v.first),
+              )
+            else
+              TextField(
               controller: _c[i],
               keyboardType: widget.fields[i].text
                   ? TextInputType.multiline

@@ -49,6 +49,19 @@ void main() {
     expect(age(['2030', '1', '1'], now), isNull);
     expect(age(['1990', '13', '1'], now), isNull);
   });
+  test('age dual calendar', () {
+    final now = DateTime(2026, 10, 3);
+    final g = age(['g', '1990', '5', '15'], now)!;
+    expect(g[0].$2, '36 سنة و 4 شهر و 18 يوم');
+    expect(g.any((r) => r.$1 == 'العمر بالهجري'), isTrue);
+    expect(g.any((r) => r.$1 == 'تاريخ الميلاد (هجري)' && r.$2.contains('هـ')), isTrue);
+    final h = age(['h', '1446', '9', '1'], now)!;
+    expect(h.firstWhere((r) => r.$1 == 'تاريخ الميلاد (ميلادي)').$2, contains('2025-03-01'));
+    expect(h.any((r) => r.$1 == 'العمر بالميلادي'), isTrue);
+    expect(age(['h', '1446', '9', '31'], now), isNull);
+    expect(age(['h', '1200', '1', '1'], now), isNull);
+    expect(age(['h', '1500', '1', '1'], now), isNull);
+  });
   test('loan', () {
     expect(loan(['10000', '0', '10'])![0].$2, '1000');
     expect(loan(['100000', '12', '12'])![0].$2, '8884.88');

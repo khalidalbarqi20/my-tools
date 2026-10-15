@@ -4,6 +4,7 @@ import 'images_page.dart';
 import 'merge_page.dart';
 import 'pdf_ops.dart';
 import 'pdf_preview_page.dart';
+import 'pdf_stamp.dart';
 import 'single_pdf_tool.dart';
 
 Tool _t(String id, String ar, String en, List<String> kw, IconData icon,
@@ -19,6 +20,9 @@ Tool _t(String id, String ar, String en, List<String> kw, IconData icon,
     );
 
 const _rangeNote = 'أمثلة: 1-3,5 تعني الصفحات 1 و2 و3 و5.  8- تعني من الصفحة 8 للنهاية.';
+
+const _stampNote =
+    'تُعاد كتابة الصفحات كصور، فيزيد حجم الملف ولا يمكن تحديد النص فيه بعدها. الحد الأقصى 80 صفحة.';
 
 final List<Tool> pdfTools = [
   _t('pdf_merge', 'دمج PDF', 'Merge PDF',
@@ -102,4 +106,31 @@ final List<Tool> pdfTools = [
   _t('pdf_preview', 'معاينة PDF', 'PDF Viewer',
       ['معاينة', 'عرض', 'قراءة', 'فتح', 'view', 'preview', 'open', 'reader'],
       Icons.visibility_outlined, (_) => const PdfPreviewPage()),
+  _t('pdf_numbers', 'ترقيم صفحات PDF', 'Add Page Numbers',
+      ['ترقيم', 'أرقام الصفحات', 'رقم الصفحة', 'page numbers', 'number'],
+      Icons.format_list_numbered,
+      (_) => SinglePdfTool(
+            title: 'ترقيم صفحات PDF',
+            actionLabel: 'إضافة الأرقام',
+            run: addPageNumbers,
+            options: const [
+              Opt.choice('pos', 'مكان الرقم',
+                  [('center', 'أسفل الوسط'), ('right', 'أسفل اليمين'), ('left', 'أسفل اليسار')],
+                  initial: 'center'),
+              Opt.toggle('total', 'عرض الشكل 3 / 10'),
+            ],
+            note: _stampNote,
+          )),
+  _t('pdf_watermark', 'علامة مائية على PDF', 'PDF Watermark',
+      ['علامة مائية', 'ختم', 'مسودة', 'سري', 'watermark', 'stamp', 'draft'],
+      Icons.branding_watermark_outlined,
+      (_) => SinglePdfTool(
+            title: 'علامة مائية على PDF',
+            actionLabel: 'إضافة العلامة',
+            run: addWatermark,
+            options: const [
+              Opt.text('text', 'نص العلامة', hint: 'مثال: سري، مسودة، DRAFT'),
+            ],
+            note: _stampNote,
+          )),
 ];
