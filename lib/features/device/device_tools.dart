@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/tool.dart';
 import 'device_pages.dart';
+import 'media_pages.dart';
 import 'sensor_pages.dart';
 import 'sensor_test_page.dart';
 
@@ -41,4 +42,13 @@ final List<Tool> deviceTools = [
   _t('dev_vibration', 'اختبار الاهتزاز', 'Vibration Test',
       ['اهتزاز', 'هزاز', 'vibration', 'vibrate', 'haptic'],
       Icons.vibration, (_) => const VibrationTestPage()),
+  _t('dev_camera', 'اختبار الكاميرا', 'Camera Test',
+      ['كاميرا', 'تصوير', 'عدسة', 'أمامية', 'خلفية', 'camera', 'lens', 'front', 'rear'],
+      Icons.photo_camera_outlined, (_) => const CameraTestPage()),
+  _t('dev_mic', 'اختبار الميكروفون', 'Microphone Test',
+      ['ميكروفون', 'مايك', 'صوت', 'تسجيل', 'microphone', 'mic', 'audio', 'record'],
+      Icons.mic_none, (_) => const MicTestPage()),
+  _t('dev_speaker', 'اختبار السماعة', 'Speaker Test',
+      ['سماعة', 'صوت', 'مكبر', 'يمين', 'يسار', 'speaker', 'sound', 'headphones', 'stereo'],
+      Icons.volume_up_outlined, (_) => const SpeakerTestPage()),
 ];

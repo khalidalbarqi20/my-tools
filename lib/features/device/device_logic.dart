@@ -69,3 +69,62 @@ String directionAr(double deg) {
 /// ميلان الجهاز المسطّح بالدرجات حول المحورين (x, y).
 (double, double) levelAngles(double ax, double ay, double az) =>
     (atan2(ax, az) * 180 / pi, atan2(ay, az) * 180 / pi);
+
+/// ملف WAV صغير (16 بت، ستيريو) لنغمة جيبية؛ يُستخدم لاختبار السماعة اليمنى واليسرى.
+List<int> toneWav({
+  double freq = 440,
+  int ms = 1200,
+  bool left = true,
+  bool right = true,
+  int rate = 22050,
+}) {
+  final n = rate * ms ~/ 1000;
+  final dataLen = n * 4;
+  final b = List<int>.filled(44 + dataLen, 0);
+  void s(int o, String t) {
+    for (var i = 0; i < t.length; i++) {
+      b[o + i] = t.codeUnitAt(i);
+    }
+  }
+
+  void u32(int o, int v) {
+    for (var i = 0; i < 4; i++) {
+      b[o + i] = (v >> (8 * i)) & 0xFF;
+    }
+  }
+
+  void u16(int o, int v) {
+    b[o] = v & 0xFF;
+    b[o + 1] = (v >> 8) & 0xFF;
+  }
+
+  s(0, 'RIFF');
+  u32(4, 36 + dataLen);
+  s(8, 'WAVEfmt ');
+  u32(16, 16);
+  u16(20, 1);
+  u16(22, 2);
+  u32(24, rate);
+  u32(28, rate * 4);
+  u16(32, 4);
+  u16(34, 16);
+  s(36, 'data');
+  u32(40, dataLen);
+  final fade = rate ~/ 50; // 20ms لتفادي الطقطقة
+  for (var i = 0; i < n; i++) {
+    var a = sin(2 * pi * freq * i / rate) * 0.6;
+    if (i < fade) a *= i / fade;
+    if (i > n - fade) a *= (n - i) / fade;
+    final v = (a * 32767).round() & 0xFFFF;
+    final o = 44 + i * 4;
+    if (left) u16(o, v);
+    if (right) u16(o + 2, v);
+  }
+  return b;
+}
+
+/// يحوّل مستوى الصوت من ديسيبل (-160..0) إلى 0..1 للعرض.
+double micLevel(double db) {
+  if (db.isNaN) return 0;
+  return ((db + 60) / 60).clamp(0.0, 1.0).toDouble();
+}

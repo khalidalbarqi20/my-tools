@@ -67,4 +67,22 @@ void compassTests() {
       expect(y1, closeTo(0, 1e-6));
     });
   });
+  test('نغمة السماعة WAV', () {
+    final w = toneWav(ms: 100, left: true, right: false);
+    expect(String.fromCharCodes(w.sublist(0, 4)), 'RIFF');
+    expect(String.fromCharCodes(w.sublist(8, 12)), 'WAVE');
+    expect(w.length, 44 + 22050 * 100 ~/ 1000 * 4);
+    // القناة اليمنى صامتة دائمًا
+    var rightSilent = true;
+    for (var o = 44 + 2; o < w.length; o += 4) {
+      if (w[o] != 0 || w[o + 1] != 0) rightSilent = false;
+    }
+    expect(rightSilent, isTrue);
+  });
+  test('مستوى المايك', () {
+    expect(micLevel(-160), 0);
+    expect(micLevel(0), 1);
+    expect(micLevel(-30), closeTo(0.5, 0.001));
+    expect(micLevel(double.nan), 0);
+  });
 }

@@ -293,37 +293,3 @@ class _TouchPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _TouchPainter old) => true;
 }
-
-// ───────────────────────── اختبار الاهتزاز ─────────────────────────
-class VibrationTestPage extends StatelessWidget {
-  const VibrationTestPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context);
-    Widget btn(String label, IconData icon, VoidCallback f) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: FilledButton.tonalIcon(
-            onPressed: f,
-            icon: Icon(icon),
-            label: Text(label),
-          ),
-        );
-    return Scaffold(
-      appBar: AppBar(title: const Text('اختبار الاهتزاز')),
-      body: ListView(padding: const EdgeInsets.all(20), children: [
-        btn('اهتزاز خفيف', Icons.vibration, HapticFeedback.lightImpact),
-        btn('اهتزاز متوسط', Icons.vibration, HapticFeedback.mediumImpact),
-        btn('اهتزاز قوي', Icons.vibration, HapticFeedback.heavyImpact),
-        btn('اهتزاز عادي', Icons.vibration, HapticFeedback.vibrate),
-        const SizedBox(height: 8),
-        Text(
-          'إذا لم تشعر باهتزاز: تأكد أن اهتزاز اللمس مفعّل في إعدادات الهاتف '
-          'وأن الجهاز ليس في وضع توفير الطاقة. بعض الأجهزة لا تدعم كل الأنماط.',
-          style: t.textTheme.bodySmall
-              ?.copyWith(color: t.colorScheme.onSurfaceVariant),
-        ),
-      ]),
-    );
-  }
-}
