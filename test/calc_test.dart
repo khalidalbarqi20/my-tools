@@ -4,6 +4,7 @@ import 'package:my_tools/core/registry.dart';
 import 'package:my_tools/features/calculator/calc_logic.dart';
 import 'package:my_tools/features/calculator/expr.dart';
 import 'package:my_tools/features/calculator/finance_logic.dart';
+import 'package:my_tools/features/calculator/health_logic.dart';
 
 void main() {
   test('fmt', () {
@@ -100,5 +101,27 @@ void main() {
     expect(ids.toSet().length, ids.length);
     expect(allTools.every((t) => t.keywords.isNotEmpty), true);
     expect(allTools.firstWhere((t) => t.matches('جمع')).id, 'calculator');
+  });
+  test('calories', () {
+    // ذكر 30 سنة 80 كجم 180 سم: BMR = 800+1125-150+5 = 1780
+    final r = calories(['m', '30', '80', '180', '1.55', 'keep'])!;
+    expect(r[0].$2, '1780 سعرة');
+    expect(r[1].$2, '2759 سعرة');
+    expect(r[2].$2, '2759 سعرة');
+    expect(calories(['m', '30', '80', '180', '1.55', 'lose'])![2].$2, '2259 سعرة');
+    // أنثى صغيرة: التنزيل لا ينزل تحت BMR
+    final f = calories(['f', '50', '50', '150', '1.2', 'lose'])!;
+    expect(f[2].$2, f[0].$2);
+    expect(calories(['m', '17', '80', '180', '1.55', 'keep']), isNull);
+    expect(calories(['x', '30', '80', '180', '1.55', 'keep']), isNull);
+    expect(calories(['m', '30', '8', '180', '1.55', 'keep']), isNull);
+  });
+  test('macros', () {
+    final r = macros(['80', '2500', 'keep'])!;
+    expect(r[0].$2, startsWith('112 جم')); // 80*1.4
+    expect(r[2].$2, startsWith('69 جم')); // 2500*.25/9
+    expect(r[1].$2, startsWith('357 جم')); // (2500-448-625)/4
+    expect(macros(['80', '900', 'keep']), isNull);
+    expect(macros(['abc', '2500', 'keep']), isNull);
   });
 }

@@ -6,6 +6,7 @@ import 'calc_logic.dart';
 import 'calculator_page.dart';
 import 'discount_page.dart';
 import 'finance_logic.dart';
+import 'health_logic.dart';
 
 Tool _calc({
   required String id,
@@ -92,6 +93,31 @@ final List<Tool> calcTools = [
     icon: Icons.monitor_weight_outlined, fn: bmi,
     note: 'للمعلومات العامة وليست استشارة طبية',
     fields: [CalcField('الوزن (كجم)'), CalcField('الطول (سم)')],
+  ),
+  _calc(
+    id: 'calories', ar: 'حاسبة السعرات', en: 'Calorie Calculator',
+    kw: ['سعرات', 'سعرة', 'حرق', 'رجيم', 'دايت', 'تنزيل الوزن', 'تضخيم', 'calories', 'bmr', 'tdee', 'diet'],
+    icon: Icons.local_fire_department_outlined, fn: calories,
+    note: 'تقدير بمعادلة Mifflin-St Jeor للبالغين (18 سنة فأكثر). للمعلومات العامة وليست استشارة طبية أو غذائية.',
+    fields: [
+      CalcField('الجنس', initial: 'm', options: [('m', 'ذكر'), ('f', 'أنثى')]),
+      CalcField('العمر (سنة)'),
+      CalcField('الوزن (كجم)'),
+      CalcField('الطول (سم)'),
+      CalcField('مستوى النشاط', initial: '1.375', options: [('1.2', 'خامل'), ('1.375', 'خفيف'), ('1.55', 'متوسط'), ('1.725', 'عالٍ')]),
+      CalcField('الهدف', initial: 'keep', options: [('lose', 'تنزيل'), ('keep', 'ثبات'), ('gain', 'زيادة')]),
+    ],
+  ),
+  _calc(
+    id: 'macros', ar: 'حاسبة البروتين والكربوهيدرات', en: 'Macros Calculator',
+    kw: ['بروتين', 'كربوهيدرات', 'كارب', 'دهون', 'ماكروز', 'تغذية', 'protein', 'carbs', 'fat', 'macros'],
+    icon: Icons.restaurant_menu_outlined, fn: macros,
+    note: 'توزيع تقريبي: بروتين 1.4 إلى 1.8 جم لكل كجم (ضمن مدى 1.4 إلى 2.0 الذي تذكره الجمعية الدولية للتغذية الرياضية للنشيطين، والأقل نشاطًا يكفيه عادةً أقل)، ودهون 25% من السعرات (ضمن المدى المقبول 20 إلى 35%)، والباقي كربوهيدرات. استخدم رقم السعرات من حاسبة السعرات. للمعلومات العامة وليست استشارة غذائية.',
+    fields: [
+      CalcField('الوزن (كجم)'),
+      CalcField('السعرات اليومية'),
+      CalcField('الهدف', initial: 'keep', options: [('lose', 'تنزيل'), ('keep', 'ثبات'), ('gain', 'بناء عضل')]),
+    ],
   ),
   _calc(
     id: 'age', ar: 'حاسبة العمر', en: 'Age Calculator',

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:pdf/pdf.dart' as pdf;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdfrx/pdfrx.dart';
+import '../image/image_common.dart' show OutFmt, encodeUi;
 import 'pdf_common.dart';
 
 const _maxPages = 80;
@@ -135,4 +136,57 @@ Future<List<OutFile>> addWatermark(
   if (t.isEmpty) throw const FormatException('اكتب نص العلامة المائية');
   if (t.length > 40) throw const FormatException('النص طويل. الحد الأقصى 40 حرفًا');
   return _stamp(b, base, n, 'watermarked', wm: t);
+}
+
+/// ضغط PDF بإعادة رسم الصفحات كصور JPEG بدقة أقل. مفيد للملفات الممسوحة ضوئيًا والثقيلة بالصور.
+Future<List<OutFile>> compressPdf(
+    Uint8List b, String base, int n, Map<String, String> o) async {
+  if (n > _maxPages) {
+    throw const FormatException(
+        'الحد الأقصى $_maxPages صفحة لهذه الأداة. قسّم الملف أولًا ثم أعد المحاولة.');
+  }
+  final (dpi, q) = switch (o['level']) {
+    'high' => (72.0, 50),
+    'good' => (130.0, 75),
+    _ => (100.0, 65),
+  };
+  ensurePdfInit();
+  final src = await PdfDocument.openData(b, sourceName: '$base.pdf');
+  try {
+    final imgs = <Uint8List>[];
+    final sizes = <double>[];
+    for (final p in src.pages) {
+      final k = dpi / 72;
+      final wi = (p.width * k).round().clamp(1, 3000).toInt();
+      final hi = (p.height * k).round().clamp(1, 3000).toInt();
+      final r = await p.render(
+          width: wi,
+          height: hi,
+          fullWidth: wi.toDouble(),
+          fullHeight: hi.toDouble());
+      if (r == null) throw Exception('render failed');
+      final ui.Image img;
+      try {
+        img = await r.createImage();
+      } finally {
+        r.dispose();
+      }
+      try {
+        imgs.add(await encodeUi(img, OutFmt.jpg, q));
+      } finally {
+        img.dispose();
+      }
+      sizes
+        ..add(p.width)
+        ..add(p.height);
+    }
+    final data = await compute(_assemble, <String, Object>{'imgs': imgs, 'sizes': sizes});
+    if (data.length >= b.length) {
+      throw const FormatException(
+          'الملف مضغوط أصلًا والناتج أكبر من الأصلي، لذلك لم يُحفظ. جرّب مستوى «أعلى ضغط».');
+    }
+    return [OutFile('${base}_compressed.pdf', data, 'application/pdf')];
+  } finally {
+    await src.dispose();
+  }
 }

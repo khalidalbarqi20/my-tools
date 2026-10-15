@@ -133,4 +133,18 @@ final List<Tool> pdfTools = [
             ],
             note: _stampNote,
           )),
+  _t('pdf_compress', 'ضغط PDF', 'Compress PDF',
+      ['ضغط', 'تصغير حجم', 'تقليل حجم', 'حجم الملف', 'compress', 'reduce', 'size', 'smaller'],
+      Icons.compress,
+      (_) => SinglePdfTool(
+            title: 'ضغط PDF',
+            actionLabel: 'ضغط',
+            run: compressPdf,
+            options: const [
+              Opt.choice('level', 'مستوى الضغط',
+                  [('good', 'جودة عالية'), ('mid', 'متوسط'), ('high', 'أعلى ضغط')],
+                  initial: 'mid'),
+            ],
+            note: 'تُعاد كتابة الصفحات كصور مضغوطة، لذلك لا يمكن تحديد النص بعدها. الأفضل للملفات الممسوحة ضوئيًا. الحد الأقصى 80 صفحة.',
+          )),
 ];
