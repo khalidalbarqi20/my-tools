@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'categories.dart' show categories;
 import 'search.dart';
 
 class Tool {
@@ -16,5 +17,14 @@ class Tool {
     required this.builder,
   });
 
-  bool matches(String q) => fuzzyMatch(q, [nameAr, nameEn, ...keywords]);
+  /// البحث بالاسم أو الكلمات المفتاحية أو اسم القسم (فيظهر قسم «السيارة» كاملًا عند كتابة «سيارة»).
+  bool matches(String q) {
+    final cat = categories.where((c) => c.id == category);
+    return fuzzyMatch(q, [
+      nameAr,
+      nameEn,
+      ...keywords,
+      for (final c in cat) ...[c.nameAr, c.nameEn],
+    ]);
+  }
 }
