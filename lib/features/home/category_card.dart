@@ -27,35 +27,32 @@ class CategoryCard extends StatelessWidget {
     return Material(
       color: tone.bg,
       clipBehavior: Clip.antiAlias,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(4, 10, 4, 8),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                     color: tone.fg.withValues(alpha: 0.12),
                     shape: BoxShape.circle),
-                child: Icon(category.icon, color: tone.fg, size: 22),
+                child: Icon(category.icon, color: tone.fg, size: 24),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(category.nameAr,
-                      style: t.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800, color: tone.text)),
-                  Text(toolsCount(count),
-                      style: t.textTheme.bodySmall
-                          ?.copyWith(color: tone.text.withValues(alpha: 0.75))),
-                ],
-              ),
+              const SizedBox(height: 6),
+              Text(category.nameAr,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800, color: tone.text, height: 1.2)),
+              Text('$count',
+                  style: t.textTheme.labelSmall
+                      ?.copyWith(color: tone.text.withValues(alpha: 0.75))),
             ],
           ),
         ),

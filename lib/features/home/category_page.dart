@@ -22,7 +22,7 @@ class CategoryPage extends StatelessWidget {
                 style: t.textTheme.bodyMedium
                     ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
           ),
-          for (final x in tools) ToolTile(tool: x),
+          ToolGrid(tools: tools),
         ],
       ),
     );

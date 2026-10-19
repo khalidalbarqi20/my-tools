@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/categories.dart';
 import '../../core/registry.dart';
+import '../../core/tool_tile.dart' show gridCols;
 import 'category_card.dart';
 import 'category_page.dart';
 
@@ -9,7 +10,7 @@ class CategoriesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final cols = w >= 900 ? 4 : (w >= 600 ? 3 : 2);
+    final cols = gridCols(w);
     final cats = activeCategories();
     return SafeArea(
       child: ListView(
@@ -30,7 +31,7 @@ class CategoriesPage extends StatelessWidget {
               crossAxisCount: cols,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              mainAxisExtent: 132,
+              mainAxisExtent: 112,
             ),
             itemBuilder: (c, i) {
               final cat = cats[i];

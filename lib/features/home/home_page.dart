@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _grid() {
     final w = MediaQuery.sizeOf(context).width;
-    final cols = w >= 900 ? 4 : (w >= 600 ? 3 : 2);
+    final cols = gridCols(w);
     final cats = activeCategories();
     return GridView.builder(
       shrinkWrap: true,
@@ -123,7 +123,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisCount: cols,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        mainAxisExtent: 132,
+        mainAxisExtent: 112,
       ),
       itemBuilder: (c, i) {
         final cat = cats[i];
@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                   const Text('ما لقينا أداة بهذا الاسم'),
                 ]),
               ),
-            for (final x in results) ToolTile(tool: x),
+            if (results.isNotEmpty) ToolGrid(tools: results),
           ] else ...[
             _strip(),
             _section('الأقسام'),

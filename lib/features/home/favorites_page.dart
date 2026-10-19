@@ -38,7 +38,7 @@ class FavoritesPage extends StatelessWidget {
                   ]),
                 )
               else
-                for (final x in tools) ToolTile(tool: x),
+                ToolGrid(tools: tools),
             ],
           );
         },
