@@ -12,6 +12,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     outputs:
       web: ${{ steps.webok.outputs.ok }}
     steps:
@@ -85,6 +89,14 @@ jobs:
         with:
           name: my-tools-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Publish APK as a release (direct download, no zip)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest build/app/outputs/flutter-apk/app-release.apk --title "latest APK" --notes "Latest APK, built from commit ${{ github.sha }}" --target ${{ github.sha }}
       - id: web
         continue-on-error: true
         run: flutter build web --release --base-href /my-tools/
