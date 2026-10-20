@@ -42,7 +42,7 @@ jobs:
           grep -q 'gms.ads.APPLICATION_ID' $M || sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/>\n    </application>#" $M
           # FFmpeg يستدعي كلاساته من الكود الأصلي (JNI) وR8 يحذفها فيتعطل التطبيق عند الفتح، فنحميها هنا أيضًا
           # AdMob يجلب WorkManager، وR8 يحذف مُنشئ WorkDatabase_Impl فيتعطل التطبيق عند الفتح
-          printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' '-keep class com.arthenica.** { *; }' '-keep class com.antonkarpenko.** { *; }' '-dontwarn com.arthenica.**' '-dontwarn com.antonkarpenko.**' > android/app/proguard-rules.pro
+          printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' '-keep class com.arthenica.** { *; }' '-keep class com.antonkarpenko.** { *; }' '-dontwarn com.arthenica.**' '-dontwarn com.antonkarpenko.**' '-keep class kotlin.coroutines.Continuation { *; }' '-keep class kotlin.Unit { *; }' '-keep class kotlin.Result { *; }' '-keep class kotlin.Result$Failure { *; }' '-keep class kotlin.coroutines.intrinsics.CoroutineSingletons { *; }' > android/app/proguard-rules.pro
           G=android/app/build.gradle.kts; [ -f $G ] || G=android/app/build.gradle
           # مكتبة FFmpeg تتطلب أندرويد 7 (API 24) فأكثر
           sed -i 's#minSdk = flutter.minSdkVersion#minSdk = 24#; s#minSdkVersion flutter.minSdkVersion#minSdkVersion 24#' $G
