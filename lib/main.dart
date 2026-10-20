@@ -10,8 +10,14 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Prefs.init();
-  await RemoteStore.loadCache();
+  try {
+    await Prefs.init();
+    await RemoteStore.loadCache();
+  } catch (e, st) {
+    // بدل الشاشة السوداء: نعرض سبب الفشل ليمكن إصلاحه
+    runApp(_StartupError('$e\n$st'));
+    return;
+  }
   runApp(const MyToolsApp());
   RemoteStore.refresh(); // في الخلفية
   Billing.init().then((_) => Ads.init()); // لا ننتظرها: لا نؤخر فتح التطبيق
@@ -43,4 +49,21 @@ class MyToolsApp extends StatelessWidget {
       },
     );
   }
+}
+
+class _StartupError extends StatelessWidget {
+  final String details;
+  const _StartupError(this.details);
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: SelectableText('تعذر بدء التطبيق:\n\n$details'),
+            ),
+          ),
+        ),
+      );
 }

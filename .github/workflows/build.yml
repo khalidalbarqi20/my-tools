@@ -36,8 +36,9 @@ jobs:
           grep -q 'android.permission.CAMERA' $M || sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#&\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-feature android:name="android.hardware.camera" android:required="false"/>#' $M
           for P in VIBRATE RECORD_AUDIO; do grep -q "android.permission.$P" $M || sed -i "s#<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">#&\n    <uses-permission android:name=\"android.permission.$P\"/>#" $M; done
           grep -q 'gms.ads.APPLICATION_ID' $M || sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$ADMOB_APP_ID\"/>\n    </application>#" $M
+          # FFmpeg يستدعي كلاساته من الكود الأصلي (JNI) وR8 يحذفها فيتعطل التطبيق عند الفتح، فنحميها هنا أيضًا
           # AdMob يجلب WorkManager، وR8 يحذف مُنشئ WorkDatabase_Impl فيتعطل التطبيق عند الفتح
-          printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' > android/app/proguard-rules.pro
+          printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' '-keep class com.arthenica.** { *; }' '-keep class com.antonkarpenko.** { *; }' '-dontwarn com.arthenica.**' '-dontwarn com.antonkarpenko.**' > android/app/proguard-rules.pro
           G=android/app/build.gradle.kts; [ -f $G ] || G=android/app/build.gradle
           # مكتبة FFmpeg تتطلب أندرويد 7 (API 24) فأكثر
           sed -i 's#minSdk = flutter.minSdkVersion#minSdk = 24#; s#minSdkVersion flutter.minSdkVersion#minSdkVersion 24#' $G
