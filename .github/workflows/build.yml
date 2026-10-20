@@ -39,6 +39,9 @@ jobs:
           # AdMob يجلب WorkManager، وR8 يحذف مُنشئ WorkDatabase_Impl فيتعطل التطبيق عند الفتح
           printf '%s\n' '-keep class * extends androidx.room.RoomDatabase { <init>(); }' '-keep class androidx.work.impl.WorkDatabase_Impl { <init>(); }' > android/app/proguard-rules.pro
           G=android/app/build.gradle.kts; [ -f $G ] || G=android/app/build.gradle
+          # مكتبة FFmpeg تتطلب أندرويد 7 (API 24) فأكثر
+          sed -i 's#minSdk = flutter.minSdkVersion#minSdk = 24#; s#minSdkVersion flutter.minSdkVersion#minSdkVersion 24#' $G
+          grep -n 'minSdk' $G || echo "WARNING: minSdk not found in $G"
           if ! grep -q 'proguard-rules.pro' $G; then
             if [ "$G" = android/app/build.gradle.kts ]; then
               sed -i 's#^\( *\)release {#&\n\1    proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")#' $G
@@ -73,7 +76,10 @@ jobs:
             echo "::error title=flutter test::$msg"
           fi
           exit $code
-      - run: flutter build apk --release --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }} --dart-define=REMOTE_CONFIG_URL=${{ vars.REMOTE_CONFIG_URL }}
+      - name: Build APK
+        run: |
+          B="flutter build apk --release --target-platform android-arm64 --dart-define=ADMOB_BANNER=${{ vars.ADMOB_BANNER }} --dart-define=ADMOB_INTERSTITIAL=${{ vars.ADMOB_INTERSTITIAL }} --dart-define=REMOTE_CONFIG_URL=${{ vars.REMOTE_CONFIG_URL }}"
+          $B || { echo "retrying once (ffmpeg-kit downloads its native libraries on the first Gradle run)"; $B; }
       - uses: actions/upload-artifact@v4
         with:
           name: my-tools-apk

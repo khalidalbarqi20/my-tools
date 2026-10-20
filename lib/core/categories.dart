@@ -15,6 +15,7 @@ const categories = [
   ToolCategory('convert', 'التحويلات', 'Converters', Icons.swap_horiz),
   ToolCategory('pdf', 'PDF', 'PDF', Icons.picture_as_pdf_outlined),
   ToolCategory('image', 'الصور', 'Images', Icons.image_outlined),
+  ToolCategory('video', 'الفيديو والصوت', 'Video & Audio', Icons.movie_creation_outlined),
   ToolCategory('qr', 'QR', 'QR', Icons.qr_code_2),
   ToolCategory('geo', 'الهندسة', 'Geometry', Icons.square_foot),
   ToolCategory('science', 'العلوم والإحصاء', 'Science & Statistics', Icons.science_outlined),

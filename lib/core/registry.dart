@@ -11,6 +11,7 @@ import '../features/pdf/pdf_tools.dart';
 import '../features/qr/qr_tools.dart';
 import '../features/random/random_tools.dart';
 import '../features/text/text_tools.dart';
+import '../features/video/video_tools.dart';
 import '../features/time/time_tools.dart';
 import '../remote/remote_apply.dart';
 import '../remote/remote_store.dart';
@@ -24,6 +25,7 @@ final List<Tool> _baseTools = [
   ...currencyTools,
   ...pdfTools,
   ...imageTools,
+  ...videoTools,
   ...qrTools,
   ...timeTools,
   ...textTools,

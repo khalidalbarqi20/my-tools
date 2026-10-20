@@ -105,33 +105,7 @@ class _SinglePdfToolState extends State<SinglePdfTool> {
     }
   }
 
-  Widget _opt(Opt o) {
-    if (o.isSwitch) {
-      return SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(o.label),
-        value: _o[o.key] == 'true',
-        onChanged: (v) => setState(() => _o[o.key] = v ? 'true' : 'false'),
-      );
-    }
-    if (o.choices != null) {
-      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(o.label),
-        const SizedBox(height: 6),
-        SegmentedButton<String>(
-          segments: [
-            for (final c in o.choices!) ButtonSegment(value: c.$1, label: Text(c.$2))
-          ],
-          selected: {_o[o.key]!},
-          onSelectionChanged: (s) => setState(() => _o[o.key] = s.first),
-        ),
-      ]);
-    }
-    return TextField(
-      controller: _tc[o.key],
-      decoration: InputDecoration(labelText: o.label, hintText: o.hint),
-    );
-  }
+  Widget _opt(Opt o) => buildOptField(o, _o, _tc, () => setState(() {}));
 
   @override
   Widget build(BuildContext context) {
@@ -183,4 +157,51 @@ class _SinglePdfToolState extends State<SinglePdfTool> {
       ),
     );
   }
+}
+
+/// يرسم خيارًا واحدًا (نص / اختيار / مفتاح). تستخدمه أدوات PDF والفيديو.
+Widget buildOptField(Opt o, Map<String, String> vals,
+    Map<String, TextEditingController> tcs, VoidCallback refresh) {
+  if (o.isSwitch) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(o.label),
+      value: vals[o.key] == 'true',
+      onChanged: (v) {
+        vals[o.key] = v ? 'true' : 'false';
+        refresh();
+      },
+    );
+  }
+  final ch = o.choices;
+  if (ch != null) {
+    void pick(String v) {
+      vals[o.key] = v;
+      refresh();
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(o.label),
+      const SizedBox(height: 6),
+      if (ch.length > 4)
+        Wrap(spacing: 8, runSpacing: 4, children: [
+          for (final c in ch)
+            ChoiceChip(
+              label: Text(c.$2),
+              selected: vals[o.key] == c.$1,
+              onSelected: (_) => pick(c.$1),
+            ),
+        ])
+      else
+        SegmentedButton<String>(
+          segments: [for (final c in ch) ButtonSegment(value: c.$1, label: Text(c.$2))],
+          selected: {vals[o.key]!},
+          onSelectionChanged: (s) => pick(s.first),
+        ),
+    ]);
+  }
+  return TextField(
+    controller: tcs[o.key],
+    decoration: InputDecoration(labelText: o.label, hintText: o.hint),
+  );
 }
