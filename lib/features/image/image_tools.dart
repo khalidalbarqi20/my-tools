@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/tool.dart';
 import '../pdf/single_pdf_tool.dart' show Opt;
+import 'bg_ops.dart';
 import 'crop_page.dart';
 import 'image_ops.dart';
 import 'image_tool_page.dart';
@@ -71,6 +72,22 @@ final List<Tool> imageTools = [
                   initial: 'jpg'),
             ],
             note: 'التحويل إلى JPG يستبدل الشفافية بخلفية سوداء.',
+          )),
+  _t('img_removebg', 'إزالة الخلفية', 'Remove Background',
+      ['إزالة الخلفية', 'ازالة الخلفية', 'خلفية', 'قص الخلفية', 'شفاف', 'فصل', 'ملصق', 'background', 'remove', 'bg', 'transparent', 'cutout', 'sticker'],
+      Icons.auto_fix_high,
+      (_) => ImageToolPage(
+            title: 'إزالة الخلفية',
+            actionLabel: 'إزالة الخلفية',
+            run: removeBgOne,
+            options: const [
+              Opt.choice('bg', 'الخلفية الجديدة',
+                  [('none', 'شفافة'), ('white', 'بيضاء'), ('black', 'سوداء')],
+                  initial: 'none'),
+              Opt.choice('edge', 'الحواف', [('soft', 'ناعمة'), ('hard', 'حادة')],
+                  initial: 'soft'),
+            ],
+            note: 'تعمل على الجهاز بدون رفع الصور. في أول استخدام يحتاج الجهاز إنترنت لتنزيل النموذج مرة واحدة. تُحفظ الصورة بصيغة PNG، ويتم تصغير الصور الضخمة جدًا تلقائيًا. تعمل أفضل مع الأشخاص والحيوانات والأغراض الواضحة.',
           )),
   _t('img_crop', 'قص الصورة', 'Crop Image', ['قص', 'اقتطاع', 'crop', 'cut'],
       Icons.crop, (_) => const CropPage()),

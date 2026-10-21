@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -115,12 +116,34 @@ class TrimPicker extends StatefulWidget {
 class _TrimPickerState extends State<TrimPicker> {
   VideoPlayerController? _c;
   bool _err = false, _selPlay = false;
-  double _dur = 0, _s = 0, _e = 0;
+  double _dur = 0, _s = 0, _e = 0, _pos = 0;
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  /// تحديث موضع الخط المتحرك بشكل أنعم من تحديثات المشغّل (كل ~0.5 ثانية).
+  void _startPoll() {
+    _poll?.cancel();
+    _poll = Timer.periodic(const Duration(milliseconds: 60), (_) async {
+      final c = _c;
+      if (c == null || !mounted || !c.value.isInitialized) return;
+      if (!c.value.isPlaying) return;
+      final p = await c.position;
+      if (p == null || !mounted) return;
+      final sec = p.inMilliseconds / 1000;
+      if (_selPlay && sec >= _e) {
+        _selPlay = false;
+        await c.pause();
+        await c.seekTo(_ms(_s));
+        if (mounted) setState(() => _pos = _s);
+        return;
+      }
+      setState(() => _pos = sec);
+    });
   }
 
   Future<void> _init() async {
@@ -138,7 +161,9 @@ class _TrimPickerState extends State<TrimPicker> {
       _dur = c.value.duration.inMilliseconds / 1000;
       _s = 0;
       _e = _dur;
+      _pos = 0;
     });
+    _startPoll();
     _emit();
   }
 
@@ -150,6 +175,7 @@ class _TrimPickerState extends State<TrimPicker> {
       c.pause();
       c.seekTo(_ms(_s));
     }
+    if (!c.value.isPlaying) _pos = c.value.position.inMilliseconds / 1000;
     setState(() {});
   }
 
@@ -163,6 +189,7 @@ class _TrimPickerState extends State<TrimPicker> {
     setState(() => _s = t.clamp(0.0, _e - 0.1).toDouble());
     await c?.pause();
     await c?.seekTo(_ms(_s));
+    if (mounted) setState(() => _pos = _s);
     _emit();
   }
 
@@ -172,12 +199,18 @@ class _TrimPickerState extends State<TrimPicker> {
     setState(() => _e = t.clamp(_s + 0.1, _dur).toDouble());
     await c?.pause();
     await c?.seekTo(_ms(_e));
+    if (mounted) setState(() => _pos = _e);
     _emit();
   }
 
   Future<void> _playSel() async {
     final c = _c;
     if (c == null) return;
+    if (c.value.isPlaying) {
+      _selPlay = false;
+      await c.pause();
+      return;
+    }
     _selPlay = true;
     await c.seekTo(_ms(_s));
     await c.play();
@@ -185,6 +218,7 @@ class _TrimPickerState extends State<TrimPicker> {
 
   @override
   void dispose() {
+    _poll?.cancel();
     _c?.removeListener(_tick);
     _c?.dispose();
     super.dispose();
@@ -204,6 +238,55 @@ class _TrimPickerState extends State<TrimPicker> {
         ],
       );
 
+  static const double _pad = 12; // نصف عرض مقبض/هالة السلايدر
+
+  /// بار القص (بداية/نهاية) وفوقه خط عمودي يتحرك مع تشغيل المقطع.
+  Widget _barWithPlayhead(ThemeData t) {
+    final frac = (_pos / _dur).clamp(0.0, 1.0).toDouble();
+    return SizedBox(
+      height: 48,
+      child: LayoutBuilder(builder: (context, box) {
+        final trackW = (box.maxWidth - _pad * 2).clamp(1.0, double.infinity).toDouble();
+        return Stack(alignment: Alignment.center, children: [
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: _pad),
+              rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+            ),
+            child: RangeSlider(
+              values: RangeValues(_s.clamp(0.0, _dur).toDouble(), _e.clamp(0.0, _dur).toDouble()),
+              min: 0,
+              max: _dur,
+              onChanged: (v) {
+                if (v.start != _s) {
+                  _setStart(v.start);
+                } else if (v.end != _e) {
+                  _setEnd(v.end);
+                }
+              },
+            ),
+          ),
+          // PositionedDirectional يحترم اتجاه RTL مثل السلايدر
+          PositionedDirectional(
+            start: _pad + frac * trackW - 1.5,
+            top: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              child: Column(children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(color: t.colorScheme.error, shape: BoxShape.circle),
+                ),
+                Expanded(child: Container(width: 3, color: t.colorScheme.error)),
+              ]),
+            ),
+          ),
+        ]);
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = _c;
@@ -214,17 +297,10 @@ class _TrimPickerState extends State<TrimPicker> {
     final t = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Center(child: _screen(c, widget.video, context)),
-      RangeSlider(
-        values: RangeValues(_s.clamp(0.0, _dur).toDouble(), _e.clamp(0.0, _dur).toDouble()),
-        min: 0,
-        max: _dur,
-        onChanged: (v) {
-          if (v.start != _s) {
-            _setStart(v.start);
-          } else if (v.end != _e) {
-            _setEnd(v.end);
-          }
-        },
+      _barWithPlayhead(t),
+      Center(
+        child: Text('الموضع الحالي: ${fmtClockMs(_pos)}',
+            style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.primary)),
       ),
       Text('البداية: ${fmtClockMs(_s)}', textAlign: TextAlign.center, style: t.textTheme.titleSmall),
       _nudges((d) => _setStart(_s + d)),
@@ -238,8 +314,8 @@ class _TrimPickerState extends State<TrimPicker> {
       const SizedBox(height: 4),
       FilledButton.tonalIcon(
         onPressed: _playSel,
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('تشغيل المقطع المحدد'),
+        icon: Icon(c.value.isPlaying ? Icons.pause : Icons.play_arrow),
+        label: Text(c.value.isPlaying ? 'إيقاف مؤقت' : 'تشغيل المقطع المحدد'),
       ),
     ]);
   }
