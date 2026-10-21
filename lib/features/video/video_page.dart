@@ -5,6 +5,7 @@ import '../pdf/pdf_common.dart' show friendlyError, humanSize;
 import '../pdf/single_pdf_tool.dart' show Opt, buildOptField;
 import 'video_engine.dart';
 import 'video_logic.dart';
+import 'video_preview.dart';
 
 /// بيانات الملف المختار والخيارات، تُمرَّر لدالة بناء المهمة.
 class MediaCtx {
@@ -24,6 +25,8 @@ class MediaToolPage extends StatefulWidget {
   final List<Opt> options;
   final JobBuilder build;
   final bool needAudio, needVideo;
+  /// معاينة الملف مع شريط بداية/نهاية متحركين (لأداة القص) بدل كتابة الأوقات.
+  final bool trimPicker;
   final String? note;
   const MediaToolPage({
     super.key,
@@ -35,6 +38,7 @@ class MediaToolPage extends StatefulWidget {
     this.pickLabel = 'اختيار ملف',
     this.needAudio = false,
     this.needVideo = false,
+    this.trimPicker = false,
     this.note,
   });
   @override
@@ -212,6 +216,16 @@ class _MediaToolPageState extends State<MediaToolPage> {
                   humanSize(_size),
                 ].join(' • ')),
               ),
+            if (widget.trimPicker && _path != null && info != null)
+              TrimPicker(
+                key: ValueKey(_path),
+                path: _path!,
+                video: info.hasVideo,
+                onChanged: (s, e) {
+                  _o['start'] = s.toStringAsFixed(3);
+                  _o['end'] = e == null ? '' : e.toStringAsFixed(3);
+                },
+              ),
             const SizedBox(height: 8),
             for (final o in widget.options) ...[
               buildOptField(o, _o, _tc, () => setState(() {})),
@@ -240,9 +254,19 @@ class _MediaToolPageState extends State<MediaToolPage> {
                   padding: const EdgeInsets.all(12),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(out.name, overflow: TextOverflow.ellipsis),
-                    Text(humanSize(_outSize),
+                    Text(
+                        out.mustShrink
+                            ? '${humanSize(_size)}  ←  ${humanSize(_outSize)}'
+                            : humanSize(_outSize),
                         style: t.textTheme.bodySmall
                             ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    MediaPreview(
+                      key: ValueKey(out.outPath),
+                      path: out.outPath,
+                      video: out.mime.startsWith('video/'),
+                      gif: out.mime == 'image/gif',
+                    ),
                     const SizedBox(height: 8),
                     Row(children: [
                       FilledButton.tonalIcon(

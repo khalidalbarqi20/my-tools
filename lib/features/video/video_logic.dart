@@ -49,6 +49,12 @@ String fmtClock(double sec) {
   return h > 0 ? '$h:${two(m)}:${two(r)}' : '$m:${two(r)}';
 }
 
+/// مثل fmtClock مع عُشر الثانية: 1:05.3
+String fmtClockMs(double sec) {
+  final t = (sec * 10).round();
+  return '${fmtClock((t ~/ 10).toDouble())}.${t % 10}';
+}
+
 /// زاوية تدوير الفيديو من خصائص ffprobe (وسم rotate أو displaymatrix).
 int rotationOf(Map? p) {
   if (p == null) return 0;

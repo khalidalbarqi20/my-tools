@@ -17,6 +17,11 @@ void main() {
     expect(fmtClock(3723), '1:02:03');
     expect(fmtClock(0), '0:00');
   });
+  test('fmtClockMs', () {
+    expect(fmtClockMs(65.34), '1:05.3');
+    expect(fmtClockMs(0.05), '0:00.1');
+    expect(fmtClockMs(3723.0), '1:02:03.0');
+  });
   test('rotationOf', () {
     expect(rotationOf(null), 0);
     expect(rotationOf({'tags': {'rotate': '90'}}), 90);
