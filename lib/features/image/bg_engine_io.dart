@@ -22,7 +22,11 @@ Future<BgMask> segmentForeground(Uint8List png, int w, int h) async {
   final path =
       '${Directory.systemTemp.path}/mt_bg_${DateTime.now().microsecondsSinceEpoch}.png';
   final segmenter = SubjectSegmenter(
-      options: SubjectSegmenterOptions(enableForegroundConfidenceMask: true));
+      options: SubjectSegmenterOptions(
+          enableForegroundBitmap: false,
+          enableForegroundConfidenceMask: true,
+          enableMultiConfidenceMask: false,
+          enableMultiSubjectBitmap: false));
   try {
     await File(path).writeAsBytes(png, flush: true);
     final dynamic r =
