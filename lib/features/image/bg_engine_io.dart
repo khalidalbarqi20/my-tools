@@ -25,14 +25,15 @@ Future<BgMask> segmentForeground(Uint8List png, int w, int h) async {
       options: SubjectSegmenterOptions(
           enableForegroundBitmap: false,
           enableForegroundConfidenceMask: true,
-          enableMultiConfidenceMask: false,
-          enableMultiSubjectBitmap: false));
+          enableMultipleSubjects: SubjectResultOptions(
+              enableConfidenceMask: false, enableSubjectBitmap: false)));
   try {
     await File(path).writeAsBytes(png, flush: true);
     final dynamic r =
         await segmenter.processImage(InputImage.fromFilePath(path));
     final raw = _field(() => r.foregroundConfidenceMask) ??
-        _field(() => r.confidences);
+        _field(() => r.confidences) ??
+        _field(() => r.confidenceMask);
     if (raw is! List || raw.isEmpty) {
       throw const FormatException('لم يتم العثور على عنصر رئيسي واضح في الصورة.');
     }
