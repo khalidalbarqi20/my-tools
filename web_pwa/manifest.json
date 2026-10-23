@@ -1,0 +1,21 @@
+{
+  "id": "/my-tools/",
+  "name": "أدواتي اليومية",
+  "short_name": "أدواتي",
+  "description": "كل أدواتك اليومية في مكان واحد",
+  "start_url": "/my-tools/?source=pwa",
+  "scope": "/my-tools/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F1814",
+  "theme_color": "#0F1814",
+  "lang": "ar",
+  "dir": "rtl",
+  "prefer_related_applications": false,
+  "icons": [
+    {"src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

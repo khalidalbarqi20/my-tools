@@ -56,6 +56,15 @@ jobs:
           fi
           grep -q 'strictFullModeForKeepRules' android/gradle.properties || echo 'android.r8.strictFullModeForKeepRules=false' >> android/gradle.properties
           grep -n 'proguard' $G || echo "WARNING: proguard line not added to $G"
+      - name: PWA setup (installable, isolated from other projects)
+        continue-on-error: true
+        run: |
+          cp web_pwa/manifest.json web/manifest.json
+          cp web_pwa/my_tools_sw.js web/my_tools_sw.js
+          mkdir -p web/icons
+          cp web_pwa/icons/Icon-*.png web/icons/
+          cp web_pwa/icons/favicon.png web/favicon.png
+          python3 web_pwa/patch_index.py
       - run: flutter pub get
       - name: Analyze
         run: |

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'ads/ads.dart';
 import 'billing/billing.dart';
 import 'navigation/shell.dart';
@@ -10,6 +12,8 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // على الويب كل مشاريع github.io تشترك في نفس التخزين المحلي، فنعزل مفاتيحنا ببادئة خاصة.
+  if (kIsWeb) SharedPreferences.setPrefix('my_tools.');
   try {
     await Prefs.init();
     await RemoteStore.loadCache();
