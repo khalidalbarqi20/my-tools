@@ -29,8 +29,25 @@ Future<BgMask> segmentForeground(Uint8List png, int w, int h) async {
               enableConfidenceMask: false, enableSubjectBitmap: false)));
   try {
     await File(path).writeAsBytes(png, flush: true);
-    final dynamic r =
-        await segmenter.processImage(InputImage.fromFilePath(path));
+    final input = InputImage.fromFilePath(path);
+    // أول استخدام: النموذج ينزل في الخلفية، فنعيد المحاولة عدة مرات قبل الاستسلام.
+    dynamic r;
+    Object? lastErr;
+    for (var attempt = 0; attempt < 6; attempt++) {
+      try {
+        r = await segmenter.processImage(input);
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+        await Future.delayed(const Duration(seconds: 4));
+      }
+    }
+    if (lastErr != null) {
+      var d = '$lastErr';
+      if (d.length > 220) d = d.substring(0, 220);
+      throw FormatException('$_modelMsg\n[$d]');
+    }
     final raw = _field(() => r.foregroundConfidenceMask) ??
         _field(() => r.confidences) ??
         _field(() => r.confidenceMask);
@@ -46,8 +63,10 @@ Future<BgMask> segmentForeground(Uint8List png, int w, int h) async {
     return BgMask(w, h, conf);
   } on FormatException {
     rethrow;
-  } catch (_) {
-    throw const FormatException(_modelMsg);
+  } catch (e) {
+    var d = '$e';
+    if (d.length > 220) d = d.substring(0, 220);
+    throw FormatException('تعذر معالجة الصورة.\n[$d]');
   } finally {
     try {
       await segmenter.close();
