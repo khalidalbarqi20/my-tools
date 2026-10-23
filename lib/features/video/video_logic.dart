@@ -155,6 +155,7 @@ const videoFormats = [
 
 String videoMime(String ext) => switch (ext) {
       'mkv' => 'video/x-matroska',
+      'mov' => 'video/quicktime',
       'webm' => 'video/webm',
       'avi' => 'video/x-msvideo',
       'gif' => 'image/gif',

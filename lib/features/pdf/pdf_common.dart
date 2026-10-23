@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
+export 'result_list.dart' show ResultList;
+
 bool _inited = false;
 void ensurePdfInit() {
   if (!_inited) {
@@ -79,42 +81,5 @@ Future<void> shareOut(BuildContext context, List<OutFile> fs) async {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تعذر فتح قائمة المشاركة')));
     }
-  }
-}
-
-class ResultList extends StatelessWidget {
-  final List<OutFile> files;
-  const ResultList(this.files, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    if (files.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SizedBox(height: 20),
-      Text('النتيجة', style: Theme.of(context).textTheme.titleMedium),
-      for (final f in files)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(f.mime == 'application/pdf'
-              ? Icons.picture_as_pdf_outlined
-              : Icons.image_outlined),
-          title: Text(f.name, overflow: TextOverflow.ellipsis),
-          subtitle: Text(humanSize(f.bytes.length)),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            IconButton(
-                tooltip: 'حفظ',
-                icon: const Icon(Icons.download),
-                onPressed: () => saveOut(context, f)),
-            IconButton(
-                tooltip: 'مشاركة',
-                icon: const Icon(Icons.share),
-                onPressed: () => shareOut(context, [f])),
-          ]),
-        ),
-      if (files.length > 1)
-        OutlinedButton.icon(
-            onPressed: () => shareOut(context, files),
-            icon: const Icon(Icons.share),
-            label: const Text('مشاركة الكل')),
-    ]);
   }
 }

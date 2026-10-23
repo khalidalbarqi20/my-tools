@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import '../pdf/pdf_common.dart' show friendlyError, humanSize;
+import '../pdf/pdf_common.dart' show baseName, friendlyError, humanSize;
 import '../pdf/single_pdf_tool.dart' show Opt, buildOptField;
 import 'video_engine.dart';
 import 'video_logic.dart';
@@ -51,7 +51,7 @@ class _MediaToolPageState extends State<MediaToolPage> {
   int _size = 0;
   bool _busy = false;
   double _progress = 0;
-  Job? _out;
+  Job? _out, _base;
   int _outSize = 0;
   late final Map<String, String> _o = {for (final o in widget.options) o.key: o.initial};
   late final Map<String, TextEditingController> _tc = {
@@ -62,8 +62,9 @@ class _MediaToolPageState extends State<MediaToolPage> {
   @override
   void dispose() {
     if (_busy) cancelFfmpeg();
-    final out = _out;
+    final out = _out, base = _base;
     if (out != null) deleteQuiet(out.outPath);
+    if (base != null && base != out) deleteQuiet(base.outPath);
     for (final c in _tc.values) {
       c.dispose();
     }
@@ -71,9 +72,11 @@ class _MediaToolPageState extends State<MediaToolPage> {
   }
 
   Future<void> _clearOut() async {
-    final out = _out;
+    final out = _out, base = _base;
     _out = null;
+    _base = null;
     if (out != null) await deleteQuiet(out.outPath);
+    if (base != null && base != out) await deleteQuiet(base.outPath);
   }
 
   Future<void> _pick() async {
@@ -138,6 +141,7 @@ class _MediaToolPageState extends State<MediaToolPage> {
       }
       setState(() {
         _out = job;
+        _base = job;
         _outSize = sz;
       });
     } catch (e) {
@@ -155,6 +159,183 @@ class _MediaToolPageState extends State<MediaToolPage> {
 
   void _snack(String m) {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  }
+
+  static const _exportVideo = [
+    ('mp4', 'MP4'),
+    ('mkv', 'MKV'),
+    ('mov', 'MOV'),
+    ('webm', 'WEBM'),
+    ('avi', 'AVI'),
+    ('gif', 'GIF'),
+  ];
+
+  Future<({String kind, String key, String q})?> _askExport(Job base) {
+    final isVideo = base.mime.startsWith('video/');
+    String? kind, key;
+    String vq = '5', aq = '192';
+    return showModalBottomSheet<({String kind, String key, String q})>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, set) {
+        Widget chips(String k, List<(String, String)> items) => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final e in items)
+                  ChoiceChip(
+                    label: Text(e.$2),
+                    selected: kind == k && key == e.$1,
+                    onSelected: (_) => set(() {
+                      kind = k;
+                      key = e.$1;
+                    }),
+                  ),
+              ],
+            );
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('تصدير بصيغة', style: Theme.of(ctx).textTheme.titleMedium),
+                const SizedBox(height: 12),
+                if (_out != base)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: ActionChip(
+                      avatar: const Icon(Icons.undo, size: 18),
+                      label: const Text('العودة للملف الأصلي'),
+                      onPressed: () => Navigator.pop(ctx, (kind: 'orig', key: '', q: '')),
+                    ),
+                  ),
+                if (isVideo) ...[
+                  const Text('فيديو'),
+                  const SizedBox(height: 6),
+                  chips('video', _exportVideo),
+                  const SizedBox(height: 12),
+                ],
+                Text(isVideo ? 'صوت فقط' : 'الصيغ'),
+                const SizedBox(height: 6),
+                chips('audio', audioFormats),
+                const SizedBox(height: 12),
+                if (kind == 'video') ...[
+                  const Text('الجودة'),
+                  const SizedBox(height: 6),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: '2', label: Text('عالية')),
+                      ButtonSegment(value: '5', label: Text('متوسطة')),
+                      ButtonSegment(value: '9', label: Text('أقل حجمًا')),
+                    ],
+                    selected: {vq},
+                    onSelectionChanged: (s) => set(() => vq = s.first),
+                  ),
+                ],
+                if (kind == 'audio') ...[
+                  const Text('جودة الصوت (للصيغ المضغوطة)'),
+                  const SizedBox(height: 6),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: '128', label: Text('128')),
+                      ButtonSegment(value: '192', label: Text('192')),
+                      ButtonSegment(value: '256', label: Text('256')),
+                      ButtonSegment(value: '320', label: Text('320')),
+                    ],
+                    selected: {aq},
+                    onSelectionChanged: (s) => set(() => aq = s.first),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: key == null
+                        ? null
+                        : () => Navigator.pop(
+                            ctx, (kind: kind!, key: key!, q: kind == 'video' ? vq : aq)),
+                    child: const Text('تصدير'),
+                  ),
+                ),
+              ]),
+        );
+      }),
+    );
+  }
+
+  Future<void> _export() async {
+    final base = _base;
+    if (base == null || _busy) return;
+    final s = await _askExport(base);
+    if (s == null || !mounted) return;
+    if (s.kind == 'orig') {
+      final cur = _out;
+      final sz = await fileSize(base.outPath);
+      if (cur != null && cur != base) await deleteQuiet(cur.outPath);
+      if (mounted) {
+        setState(() {
+          _out = base;
+          _outSize = sz;
+        });
+      }
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _err = null;
+      _progress = 0;
+    });
+    String? tmp;
+    try {
+      double? dur;
+      try {
+        dur = (await probeMedia(base.outPath)).duration;
+      } catch (_) {}
+      final String name, mime;
+      final List<String> args;
+      if (s.kind == 'video') {
+        if (s.key == 'gif' && (dur ?? 0) > 60) {
+          throw const FormatException('تحويل GIF للمقاطع حتى 60 ثانية. قصّ المقطع أولًا.');
+        }
+        tmp = tempPath(s.key);
+        args = convertVideoArgs(base.outPath, tmp, s.key, s.q);
+        mime = videoMime(s.key);
+        name = '${baseName(base.name)}.${s.key}';
+      } else {
+        final f = audioFmt(s.key, int.parse(s.q));
+        tmp = tempPath(f.ext);
+        args = extractAudioArgs(base.outPath, tmp, f);
+        mime = f.mime;
+        name = '${baseName(base.name)}.${f.ext}';
+      }
+      await runFfmpeg(args, totalSec: dur, onProgress: (v) {
+        if (mounted) setState(() => _progress = v);
+      });
+      final sz = await fileSize(tmp);
+      if (sz <= 0) throw const FormatException('لم يُنتج الملف. جرّب صيغة أخرى.');
+      final job = Job(args, tmp, mime, name: name);
+      final old = _out;
+      if (!mounted) {
+        await deleteQuiet(tmp);
+        return;
+      }
+      if (old != null && old != base) await deleteQuiet(old.outPath);
+      setState(() {
+        _out = job;
+        _outSize = sz;
+      });
+    } catch (e) {
+      if (tmp != null) await deleteQuiet(tmp);
+      if (mounted) {
+        setState(() => _err = e is FormatException
+            ? friendlyError(e)
+            : 'تعذر التصدير بهذه الصيغة. إذا كان الملف بلا صوت فاختر صيغة فيديو.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _save() async {
@@ -268,12 +449,15 @@ class _MediaToolPageState extends State<MediaToolPage> {
                       gif: out.mime == 'image/gif',
                     ),
                     const SizedBox(height: 8),
-                    Row(children: [
+                    Wrap(spacing: 8, runSpacing: 8, children: [
                       FilledButton.tonalIcon(
                           onPressed: _save,
                           icon: const Icon(Icons.save_alt),
                           label: const Text('حفظ')),
-                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                          onPressed: _busy ? null : _export,
+                          icon: const Icon(Icons.swap_horiz),
+                          label: const Text('تصدير بصيغة')),
                       OutlinedButton.icon(
                           onPressed: _share,
                           icon: const Icon(Icons.share_outlined),
