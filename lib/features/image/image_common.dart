@@ -38,14 +38,22 @@ String imgError(Object e) {
 }
 
 Future<ImgDims> imageSize(Uint8List b) async {
-  final buf = await ui.ImmutableBuffer.fromUint8List(b);
   try {
-    final d = await ui.ImageDescriptor.encoded(buf);
-    final r = ImgDims(d.width, d.height);
-    d.dispose();
+    final buf = await ui.ImmutableBuffer.fromUint8List(b);
+    try {
+      final d = await ui.ImageDescriptor.encoded(buf);
+      final r = ImgDims(d.width, d.height);
+      d.dispose();
+      return r;
+    } finally {
+      buf.dispose();
+    }
+  } catch (_) {
+    // على بعض المتصفحات (ويب) لا يدعم ImageDescriptor، فنقرأ الأبعاد من فك الصورة مباشرة.
+    final img = await decodeUi(b);
+    final r = ImgDims(img.width, img.height);
+    img.dispose();
     return r;
-  } finally {
-    buf.dispose();
   }
 }
 

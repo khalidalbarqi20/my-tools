@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/categories.dart';
+import '../../core/tool.dart';
 import '../../theme/app_theme.dart';
 
 String toolsCount(int n) => n == 1
@@ -51,6 +52,52 @@ class CategoryCard extends StatelessWidget {
                   style: t.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w800, color: tone.text, height: 1.2)),
               Text('$count',
+                  style: t.textTheme.labelSmall
+                      ?.copyWith(color: tone.text.withValues(alpha: 0.75))),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// بطاقة أداة مستقلة (بدون قسم) بنفس شكل بطاقات الأقسام، تفتح الأداة مباشرة.
+class StandaloneCard extends StatelessWidget {
+  final Tool tool;
+  final VoidCallback onTap;
+  const StandaloneCard({super.key, required this.tool, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    final tone = tonalFor(context, tool.category);
+    return Material(
+      color: tone.bg,
+      clipBehavior: Clip.antiAlias,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 10, 4, 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                    color: tone.fg.withValues(alpha: 0.12),
+                    shape: BoxShape.circle),
+                child: Icon(tool.icon, color: tone.fg, size: 24),
+              ),
+              const SizedBox(height: 6),
+              Text(tool.nameAr,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800, color: tone.text, height: 1.2)),
+              Text('أداة',
                   style: t.textTheme.labelSmall
                       ?.copyWith(color: tone.text.withValues(alpha: 0.75))),
             ],

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'categories.dart' show categories;
 import 'search.dart';
 
+/// قسم خاص: الأداة المستقلة لا تتبع أي تصنيف وتظهر مع الأقسام في الرئيسية.
+const kStandalone = '_standalone';
+
 class Tool {
   final String id, nameAr, nameEn, category;
   final List<String> keywords;
@@ -16,6 +19,8 @@ class Tool {
     required this.icon,
     required this.builder,
   });
+
+  bool get isStandalone => category == kStandalone;
 
   /// البحث بالاسم أو الكلمات المفتاحية أو اسم القسم (فيظهر قسم «السيارة» كاملًا عند كتابة «سيارة»).
   bool matches(String q) {

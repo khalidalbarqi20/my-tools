@@ -61,6 +61,7 @@ jobs:
         run: |
           cp web_pwa/manifest.json web/manifest.json
           cp web_pwa/my_tools_sw.js web/my_tools_sw.js
+          cp web_pwa/mt_bg.js web/mt_bg.js
           mkdir -p web/icons
           cp web_pwa/icons/Icon-*.png web/icons/
           cp web_pwa/icons/favicon.png web/favicon.png

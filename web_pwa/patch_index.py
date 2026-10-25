@@ -14,18 +14,17 @@ if 'apple-touch-icon' not in h:
     add += '  <link rel="apple-touch-icon" href="icons/Icon-192.png">\n'
 if add:
     h = h.replace('</head>', add + '</head>', 1)
+if 'mt_bg.js' not in h:
+    h = h.replace('</head>', '  <script type="module" src="mt_bg.js"></script>\n</head>', 1)
 if 'my_tools_sw.js' not in h:
     sw = """  <script>
-    // إن لم يسجّل Flutter خدمة العمل الخاصة به، نسجّل خدمتنا (شرط التثبيت). نطاقها /my-tools/ فقط.
+    // نسجّل خدمة العمل الخاصة بنا (شرط التثبيت). نطاقها /my-tools/ فقط.
     window.addEventListener('load', function () {
       if (!('serviceWorker' in navigator)) return;
       setTimeout(async function () {
         try {
-          var scope = new URL('./', document.baseURI).href;
-          var rs = await navigator.serviceWorker.getRegistrations();
-          if (!rs.some(function (r) { return r.scope === scope; })) {
-            await navigator.serviceWorker.register('my_tools_sw.js', { scope: './' });
-          }
+          // نسجّل خدمتنا دائمًا: لها معالج fetch (شرط التثبيت)، وخدمة Flutter قد تكون بلا معالج فيرفض Chrome التثبيت.
+          await navigator.serviceWorker.register('my_tools_sw.js', { scope: './' });
         } catch (e) {}
       }, 3000);
     });

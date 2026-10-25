@@ -114,11 +114,12 @@ class _HomePageState extends State<HomePage> {
     final w = MediaQuery.sizeOf(context).width;
     final cols = gridCols(w);
     final cats = activeCategories();
+    final solo = allTools.where((t) => t.isStandalone).toList();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      itemCount: cats.length,
+      itemCount: solo.length + cats.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: cols,
         mainAxisSpacing: 12,
@@ -126,7 +127,11 @@ class _HomePageState extends State<HomePage> {
         mainAxisExtent: 112,
       ),
       itemBuilder: (c, i) {
-        final cat = cats[i];
+        if (i < solo.length) {
+          return StandaloneCard(
+              tool: solo[i], onTap: () => openTool(context, solo[i]));
+        }
+        final cat = cats[i - solo.length];
         return CategoryCard(
           category: cat,
           count: allTools.where((t) => t.category == cat.id).length,
