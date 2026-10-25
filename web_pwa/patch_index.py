@@ -16,6 +16,8 @@ if add:
     h = h.replace('</head>', add + '</head>', 1)
 if 'mt_bg.js' not in h:
     h = h.replace('</head>', '  <script type="module" src="mt_bg.js"></script>\n</head>', 1)
+if 'mt_media.js' not in h:
+    h = h.replace('</head>', '  <script type="module" src="mt_media.js"></script>\n</head>', 1)
 if 'my_tools_sw.js' not in h:
     sw = """  <script>
     // نسجّل خدمة العمل الخاصة بنا (شرط التثبيت). نطاقها /my-tools/ فقط.

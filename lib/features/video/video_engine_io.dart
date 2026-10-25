@@ -87,3 +87,9 @@ Future<void> runFfmpeg(List<String> args,
 void cancelFfmpeg() {
   FFmpegKit.cancel();
 }
+
+// دوال خاصة بالويب (غير مستخدمة خارجه).
+Future<(String, String)?> webPick(String kind) async => null;
+Future<bool> webSave(String path, String name, String mime) async => false;
+Future<bool> webShare(String path, String name, String mime) async => false;
+void webPreview(String path, String mime) {}

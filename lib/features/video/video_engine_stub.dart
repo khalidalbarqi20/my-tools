@@ -15,3 +15,9 @@ Future<void> writeBytesTo(String path, Uint8List bytes) async => _no();
 Future<Uint8List> readBytesFrom(String path) async => _no();
 Future<int> fileSize(String path) async => _no();
 Future<void> deleteQuiet(String path) async {}
+
+// دوال خاصة بالويب (غير مستخدمة خارجه).
+Future<(String, String)?> webPick(String kind) async => null;
+Future<bool> webSave(String path, String name, String mime) async => false;
+Future<bool> webShare(String path, String name, String mime) async => false;
+void webPreview(String path, String mime) {}

@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../pdf/pdf_common.dart' show baseName, friendlyError, humanSize;
@@ -82,10 +83,23 @@ class _MediaToolPageState extends State<MediaToolPage> {
   Future<void> _pick() async {
     setState(() => _err = null);
     try {
-      final files = await FilePicker.pickFiles(type: widget.pickType);
-      if (files.isEmpty) return;
-      final f = files.first;
-      final p = f.path;
+      String? p, name;
+      if (kIsWeb) {
+        final w = await webPick(widget.pickType == FileType.video
+            ? 'video'
+            : widget.pickType == FileType.audio
+                ? 'audio'
+                : 'any');
+        if (w == null) return;
+        p = w.$1;
+        name = w.$2;
+      } else {
+        final files = await FilePicker.pickFiles(type: widget.pickType);
+        if (files.isEmpty) return;
+        final f = files.first;
+        p = f.path;
+        name = f.name;
+      }
       if (p == null) throw const FormatException('تعذر الوصول إلى الملف');
       final info = await probeMedia(p);
       if (widget.needAudio && !info.hasAudio) {
@@ -99,7 +113,7 @@ class _MediaToolPageState extends State<MediaToolPage> {
       if (!mounted) return;
       setState(() {
         _path = p;
-        _name = f.name;
+        _name = name;
         _info = info;
         _size = size;
       });
@@ -341,6 +355,11 @@ class _MediaToolPageState extends State<MediaToolPage> {
   Future<void> _save() async {
     final out = _out;
     if (out == null) return;
+    if (kIsWeb) {
+      await webSave(out.outPath, out.name, out.mime);
+      _snack('تم تجهيز الملف للتنزيل');
+      return;
+    }
     if (_outSize > 200 * 1024 * 1024) {
       _snack('الملف كبير، استخدم المشاركة لحفظه.');
       return;
@@ -358,6 +377,11 @@ class _MediaToolPageState extends State<MediaToolPage> {
   Future<void> _share() async {
     final out = _out;
     if (out == null) return;
+    if (kIsWeb) {
+      final ok = await webShare(out.outPath, out.name, out.mime);
+      if (!ok) _snack('المشاركة غير مدعومة في هذا المتصفح، استخدم زر حفظ.');
+      return;
+    }
     try {
       await SharePlus.instance.share(ShareParams(
         files: [XFile(out.outPath, mimeType: out.mime, name: out.name)],
@@ -450,6 +474,11 @@ class _MediaToolPageState extends State<MediaToolPage> {
                     ),
                     const SizedBox(height: 8),
                     Wrap(spacing: 8, runSpacing: 8, children: [
+                      if (kIsWeb)
+                        FilledButton.tonalIcon(
+                            onPressed: () => webPreview(out.outPath, out.mime),
+                            icon: const Icon(Icons.play_circle_outline),
+                            label: const Text('معاينة')),
                       FilledButton.tonalIcon(
                           onPressed: _save,
                           icon: const Icon(Icons.save_alt),
@@ -467,6 +496,13 @@ class _MediaToolPageState extends State<MediaToolPage> {
                 ),
               ),
           ],
+          if (kIsWeb)
+            Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Text(
+                  'على الويب تتم المعالجة داخل المتصفح بدون رفع الملفات. قد يُنزَّل محرك إضافي في أول استخدام، والملفات الكبيرة جدًا أسرع وأضمن في تطبيق الأندرويد.',
+                  style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+            ),
           if (widget.note != null)
             Padding(
               padding: const EdgeInsets.only(top: 20),

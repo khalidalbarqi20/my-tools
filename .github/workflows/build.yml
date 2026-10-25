@@ -66,6 +66,20 @@ jobs:
           cp web_pwa/icons/Icon-*.png web/icons/
           cp web_pwa/icons/favicon.png web/favicon.png
           python3 web_pwa/patch_index.py
+      - name: Build web media engine (Mediabunny + ffmpeg.wasm)
+        continue-on-error: true
+        run: |
+          set -e
+          W="$GITHUB_WORKSPACE"
+          mkdir -p /tmp/mb && cd /tmp/mb
+          npm init -y >/dev/null
+          npm i mediabunny@^1 @mediabunny/mp3-encoder@^1 @mediabunny/aac-encoder@^1 @ffmpeg/ffmpeg@0.12.15 @ffmpeg/core@0.12.10 esbuild@0.25
+          cp "$W/web_pwa/media_entry.js" entry.js
+          npx esbuild entry.js --bundle --format=esm --minify --outfile="$W/web/mt_media.js"
+          mkdir -p "$W/web/ffmpeg"
+          cp node_modules/@ffmpeg/ffmpeg/dist/esm/*.js "$W/web/ffmpeg/"
+          cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm "$W/web/ffmpeg/"
+          ls -la "$W/web/mt_media.js" "$W/web/ffmpeg"
       - run: flutter pub get
       - name: Analyze
         run: |
