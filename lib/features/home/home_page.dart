@@ -5,6 +5,7 @@ import '../../core/tool.dart';
 import '../../core/tool_tile.dart';
 import '../../storage/prefs.dart';
 import '../../theme/app_theme.dart';
+import '../htmlrun/html_runner_page.dart';
 import 'category_card.dart';
 import 'category_page.dart';
 
@@ -142,6 +143,52 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _htmlRunnerCard() {
+    final t = Theme.of(context);
+    final cs = t.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Material(
+        color: cardColor(context),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: softBorder(context)),
+        ),
+        child: InkWell(
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const HtmlRunnerPage())),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(12)),
+                child: Icon(Icons.html, color: cs.onPrimaryContainer),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('تشغيل صفحة HTML',
+                          style: t.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      Text('افتح ملف HTML أو مشروع ZIP كامل',
+                          style: t.textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant)),
+                    ]),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
@@ -208,6 +255,7 @@ class _HomePageState extends State<HomePage> {
             _strip(),
             _section('الأقسام'),
             _grid(),
+            _htmlRunnerCard(),
           ],
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:ffmpeg_kit_flutter_new_full/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_full/ffprobe_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_full/return_code.dart';
 import 'package:ffmpeg_kit_flutter_new_full/statistics.dart';
+import '../../storage/app_dir.dart';
 import 'video_logic.dart';
 
 const engineSupported = true;
@@ -93,3 +94,22 @@ Future<(String, String)?> webPick(String kind) async => null;
 Future<bool> webSave(String path, String name, String mime) async => false;
 Future<bool> webShare(String path, String name, String mime) async => false;
 void webPreview(String path, String mime) {}
+
+// حفظ دائم لنتائج العمليات (سجل «عملياتي السابقة»).
+Future<String> persistOutput(String path, String id) async {
+  final dir = Directory('${appDataDir()}/mt_history');
+  await dir.create(recursive: true);
+  final i = path.lastIndexOf('.');
+  final ext = i >= 0 ? path.substring(i + 1) : 'bin';
+  final dst = '${dir.path}/$id.$ext';
+  await File(path).copy(dst);
+  return dst;
+}
+
+Future<bool> restoreOutput(String path, String id) => File(path).exists();
+
+Future<void> deletePersisted(String path, String id) async {
+  try {
+    await File(path).delete();
+  } catch (_) {}
+}

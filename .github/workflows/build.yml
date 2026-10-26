@@ -80,7 +80,23 @@ jobs:
           cp node_modules/@ffmpeg/ffmpeg/dist/esm/*.js "$W/web/ffmpeg/"
           cp node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm "$W/web/ffmpeg/"
           ls -la "$W/web/mt_media.js" "$W/web/ffmpeg"
+      - name: Add webview dependency (HTML runner on Android/iPhone)
+        run: flutter pub add webview_flutter
       - run: flutter pub get
+      - name: Hook "عملياتي السابقة" into Settings
+        continue-on-error: true
+        run: |
+          rm -f /tmp/patched_file
+          python3 web_pwa/patch_settings.py
+          F=$(cat /tmp/patched_file 2>/dev/null || true)
+          if [ -n "$F" ]; then
+            if ! flutter analyze --no-fatal-infos --no-fatal-warnings "$F" > /tmp/pa.txt 2>&1; then
+              cat /tmp/pa.txt
+              cp "$F.orig" "$F"
+              echo "::warning title=settings patch::reverted, analyzer rejected the change"
+            fi
+            rm -f "$F.orig"
+          fi
       - name: Analyze
         run: |
           set +e

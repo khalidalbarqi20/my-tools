@@ -360,4 +360,279 @@ function preview(path, mime) {
   setTimeout(() => URL.revokeObjectURL(url), 600000);
 }
 
-window.mtMedia = { run, cancel, probe, pick, put, read, size, del, save, share, preview };
+// ───────────── مشغّل داخل الصفحة (معاينة/قص بالشريط) ─────────────
+function makePlayer(path, kind) {
+  const blob = blobOf(path);
+  const url = URL.createObjectURL(blob);
+  let el;
+  if (kind === 'image') {
+    el = document.createElement('img');
+    el.style.objectFit = 'contain';
+  } else {
+    el = document.createElement(kind === 'audio' ? 'audio' : 'video');
+    el.controls = true;
+    el.preload = 'metadata';
+    el.playsInline = true;
+    el.setAttribute('playsinline', '');
+  }
+  el.src = url;
+  el.dataset.url = url;
+  Object.assign(el.style, {
+    width: '100%', height: '100%', borderRadius: '12px',
+    background: kind === 'video' ? '#000' : 'transparent',
+  });
+  return el;
+}
+function releasePlayer(el) {
+  try { if (el.pause) el.pause(); } catch (_) {}
+  try { if (el.dataset && el.dataset.url) URL.revokeObjectURL(el.dataset.url); } catch (_) {}
+}
+
+// ───────────── تخزين دائم (IndexedDB) ─────────────
+let dbp = null;
+function idb() {
+  if (!dbp) {
+    dbp = new Promise((res, rej) => {
+      const r = indexedDB.open('mt_store', 1);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        for (const n of ['hist', 'html_meta', 'html_blob']) {
+          if (!d.objectStoreNames.contains(n)) d.createObjectStore(n);
+        }
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => { dbp = null; rej(r.error); };
+    });
+  }
+  return dbp;
+}
+async function tx(store, mode, fn) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const t = d.transaction(store, mode);
+    const rq = fn(t.objectStore(store));
+    t.oncomplete = () => res(rq ? rq.result : undefined);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error || new Error('تعذر الحفظ (قد تكون مساحة المتصفح ممتلئة).'));
+  });
+}
+
+// سجل «عملياتي السابقة»: نسخة دائمة من نتيجة العملية
+async function persist(path, id) {
+  const b = blobOf(path);
+  await tx('hist', 'readwrite', (s) => s.put(b, id));
+  const vp = '/hist/' + id + '.' + (extOf(path) || 'bin');
+  files.set(vp, b);
+  return vp;
+}
+async function restore(path, id) {
+  if (files.has(path)) return true;
+  const b = await tx('hist', 'readonly', (s) => s.get(id));
+  if (!b) return false;
+  files.set(path, b);
+  return true;
+}
+async function unpersist(path, id) {
+  files.delete(path);
+  await tx('hist', 'readwrite', (s) => s.delete(id));
+}
+
+window.mtMedia = {
+  run, cancel, probe, pick, put, read, size, del, save, share, preview,
+  makePlayer, releasePlayer, persist, restore, unpersist,
+};
+
+// ───────────── تشغيل صفحة HTML / مشروع ZIP ─────────────
+export async function unzip(blob) {
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let e = buf.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('ملف ZIP غير صالح');
+  const total = dv.getUint16(e + 10, true);
+  let p = dv.getUint32(e + 16, true);
+  const dec = new TextDecoder();
+  const raw = [];
+  for (let i = 0; i < total; i++) {
+    if (p + 46 > buf.length || dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true);
+    const xlen = dv.getUint16(p + 30, true);
+    const clen = dv.getUint16(p + 32, true);
+    const off = dv.getUint32(p + 42, true);
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nlen)).replace(/\\/g, '/');
+    p += 46 + nlen + xlen + clen;
+    if (name.endsWith('/')) continue;
+    if (name.split('/').some((x) => x === '' || x === '.' || x === '..')) continue;
+    raw.push({ name, method, csize, off });
+  }
+  if (!raw.length) throw new Error('ملف ZIP فارغ');
+  // مجلد جذري واحد يضم كل شيء؟ نزيله
+  const first = raw[0].name.split('/')[0];
+  const strip = raw.every((r) => r.name.includes('/') && r.name.split('/')[0] === first) ? first.length + 1 : 0;
+  const out = new Map();
+  for (const r of raw) {
+    const ln = dv.getUint16(r.off + 26, true);
+    const lx = dv.getUint16(r.off + 28, true);
+    const start = r.off + 30 + ln + lx;
+    const data = buf.subarray(start, start + r.csize);
+    let b;
+    if (r.method === 0) b = new Blob([data]);
+    else if (r.method === 8) b = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+    else continue;
+    out.set(r.name.slice(strip), b);
+  }
+  return out;
+}
+
+const HTML_MIME = {
+  html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript',
+  json: 'application/json', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+  gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', woff: 'font/woff', woff2: 'font/woff2',
+  ttf: 'font/ttf', otf: 'font/otf', mp3: 'audio/mpeg', mp4: 'video/mp4', webm: 'video/webm',
+  wav: 'audio/wav', ogg: 'audio/ogg', txt: 'text/plain', xml: 'application/xml', wasm: 'application/wasm',
+};
+
+export function findEntry(names) {
+  const htmls = names.filter((n) => /\.html?$/i.test(n));
+  if (!htmls.length) return null;
+  if (htmls.includes('index.html')) return 'index.html';
+  htmls.sort((a, b) => (a.split('/').length - b.split('/').length) || (a.length - b.length));
+  return htmls[0];
+}
+
+const dirOf = (p) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/') + 1) : '');
+const isExternal = (u) => !u || /^([a-z][a-z0-9+.-]*:|\/\/|#)/i.test(u);
+
+// يحوّل مسارًا نسبيًا إلى مسار داخل المشروع (أو null)
+export function resolvePath(baseDir, ref) {
+  if (isExternal(ref)) return null;
+  const clean = ref.split('#')[0].split('?')[0];
+  if (!clean) return null;
+  const parts = (clean.startsWith('/') ? clean.slice(1) : baseDir + clean).split('/');
+  const st = [];
+  for (const x of parts) {
+    if (x === '' || x === '.') continue;
+    if (x === '..') st.pop(); else st.push(x);
+  }
+  let r = st.join('/');
+  try { r = decodeURIComponent(r); } catch (_) {}
+  return r;
+}
+
+async function buildProjectUrl(map) {
+  const entry = findEntry([...map.keys()]);
+  if (!entry) throw new Error('لا يوجد ملف HTML داخل ZIP.');
+  const urls = new Map();
+  const typed = (name, blob) => new Blob([blob], { type: HTML_MIME[extOf(name)] || blob.type || 'application/octet-stream' });
+  const urlOf = (name) => {
+    if (!urls.has(name)) urls.set(name, URL.createObjectURL(typed(name, map.get(name))));
+    return urls.get(name);
+  };
+  // ملفات CSS: نحوّل url(...) فيها لروابط الملفات الأخرى
+  for (const name of [...map.keys()]) {
+    if (extOf(name) !== 'css') continue;
+    let css = await map.get(name).text();
+    const bd = dirOf(name);
+    css = css.replace(/url\(\s*(['"]?)([^)'"]+)\1\s*\)/g, (m, q, u) => {
+      const t = resolvePath(bd, u.trim());
+      return t && map.has(t) && extOf(t) !== 'css' ? 'url("' + urlOf(t) + '")' : m;
+    });
+    urls.set(name, URL.createObjectURL(new Blob([css], { type: 'text/css' })));
+  }
+  const ed = dirOf(entry);
+  const text = await map.get(entry).text();
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  for (const el of doc.querySelectorAll('[src],[href],[poster]')) {
+    if (el.tagName === 'A') continue;
+    for (const a of ['src', 'href', 'poster']) {
+      const v = el.getAttribute(a);
+      if (v == null) continue;
+      const t = resolvePath(ed, v.trim());
+      if (t && map.has(t)) el.setAttribute(a, urlOf(t));
+    }
+  }
+  for (const st of doc.querySelectorAll('style')) {
+    st.textContent = st.textContent.replace(/url\(\s*(['"]?)([^)'"]+)\1\s*\)/g, (m, q, u) => {
+      const t = resolvePath(ed, u.trim());
+      return t && map.has(t) && extOf(t) !== 'css' ? 'url("' + urlOf(t) + '")' : m;
+    });
+  }
+  // fetch / XMLHttpRequest للملفات النسبية (مثل data.json) تُوجَّه لملفات المشروع
+  const table = {};
+  for (const n of map.keys()) table[n] = urlOf(n);
+  const shim = '(function(){var T=' + JSON.stringify(table).replace(/</g, '\\u003c') + ',D=' + JSON.stringify(ed) +
+    ';function R(u){if(typeof u!=="string"||/^([a-z][a-z0-9+.-]*:|\\/\\/|#)/i.test(u))return u;var c=u.split("#")[0].split("?")[0];' +
+    'var s=(c.charAt(0)==="/"?c.slice(1):D+c).split("/"),o=[];for(var i=0;i<s.length;i++){if(s[i]===""||s[i]===".")continue;if(s[i]==="..")o.pop();else o.push(s[i]);}' +
+    'var k=o.join("/");try{k=decodeURIComponent(k);}catch(e){}return T[k]||u;}' +
+    'var f=window.fetch;if(f)window.fetch=function(i,n){return f.call(this,R(i),n);};' +
+    'var x=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){var a=Array.prototype.slice.call(arguments);a[1]=R(u);return x.apply(this,a);};})();';
+  const sc = doc.createElement('script');
+  sc.textContent = shim;
+  doc.head.insertBefore(sc, doc.head.firstChild);
+  const html = '<!doctype html>\n' + doc.documentElement.outerHTML;
+  return URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+}
+
+async function htmlUrl(id) {
+  const meta = await tx('html_meta', 'readonly', (s) => s.get(id));
+  const blob = await tx('html_blob', 'readonly', (s) => s.get(id));
+  if (!meta || !blob) throw new Error('المشروع غير موجود (ربما حُذف).');
+  if (!meta.zip) return URL.createObjectURL(new Blob([blob], { type: 'text/html;charset=utf-8' }));
+  return buildProjectUrl(await unzip(blob));
+}
+
+function pickHtml() {
+  return new Promise((resolve) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.html,.htm,.zip,text/html,application/zip,application/x-zip-compressed';
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; inp.remove(); resolve(v); } };
+    inp.addEventListener('change', () => finish((inp.files && inp.files[0]) || null));
+    inp.addEventListener('cancel', () => finish(null));
+    inp.click();
+  });
+}
+
+window.mtHtml = {
+  async listJson() {
+    const all = await tx('html_meta', 'readonly', (s) => s.getAll());
+    return JSON.stringify((all || []).sort((a, b) => b.ts - a.ts));
+  },
+  async add() {
+    const f = await pickHtml();
+    if (!f) return null;
+    const low = f.name.toLowerCase();
+    const zip = low.endsWith('.zip');
+    if (!zip && !/\.html?$/.test(low)) throw new Error('اختر ملف HTML أو مشروع ZIP.');
+    if (zip) {
+      const m = await unzip(f);
+      if (!findEntry([...m.keys()])) throw new Error('لا يوجد ملف HTML داخل ZIP.');
+    }
+    const id = String(Date.now()) + String(++seq);
+    const meta = { id, name: f.name.replace(/\.(html?|zip)$/i, ''), zip, ts: Date.now() };
+    await tx('html_blob', 'readwrite', (s) => s.put(f, id));
+    await tx('html_meta', 'readwrite', (s) => s.put(meta, id));
+    return JSON.stringify(meta);
+  },
+  async del(id) {
+    await tx('html_blob', 'readwrite', (s) => s.delete(id));
+    await tx('html_meta', 'readwrite', (s) => s.delete(id));
+  },
+  view(id) {
+    const fr = document.createElement('iframe');
+    Object.assign(fr.style, { border: '0', width: '100%', height: '100%', background: '#fff' });
+    fr.setAttribute('allow', 'camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen');
+    fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
+    htmlUrl(id).then((u) => { fr.dataset.url = u; fr.src = u; }).catch((e) => {
+      fr.srcdoc = '<meta charset="utf-8"><body style="font-family:sans-serif;padding:24px;direction:rtl">' +
+        String((e && e.message) || e).replace(/[<&]/g, '') + '</body>';
+    });
+    return fr;
+  },
+  release(el) { try { if (el.dataset && el.dataset.url) URL.revokeObjectURL(el.dataset.url); } catch (_) {} },
+};

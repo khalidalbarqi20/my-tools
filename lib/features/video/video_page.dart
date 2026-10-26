@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../storage/ops_history.dart';
 import '../pdf/pdf_common.dart' show baseName, friendlyError, humanSize;
 import '../pdf/single_pdf_tool.dart' show Opt, buildOptField;
 import 'video_engine.dart';
@@ -149,6 +150,16 @@ class _MediaToolPageState extends State<MediaToolPage> {
         throw const FormatException(
             'الملف مضغوط أصلًا والناتج أكبر من الأصلي، لذلك لم يُحفظ. جرّب جودة أقل أو دقة أصغر.');
       }
+      if (!mounted) {
+        await deleteQuiet(job.outPath);
+        return;
+      }
+      await OpsHistory.record(
+          tool: widget.title,
+          name: job.name,
+          mime: job.mime,
+          path: job.outPath,
+          size: sz);
       if (!mounted) {
         await deleteQuiet(job.outPath);
         return;
@@ -336,6 +347,16 @@ class _MediaToolPageState extends State<MediaToolPage> {
         return;
       }
       if (old != null && old != base) await deleteQuiet(old.outPath);
+      await OpsHistory.record(
+          tool: widget.title,
+          name: name,
+          mime: mime,
+          path: tmp,
+          size: sz);
+      if (!mounted) {
+        await deleteQuiet(tmp);
+        return;
+      }
       setState(() {
         _out = job;
         _outSize = sz;

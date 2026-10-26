@@ -196,10 +196,9 @@ class _BalootPageState extends State<BalootPage> {
                     ?.copyWith(fontWeight: FontWeight.w300)),
           ]),
         );
-    Widget input(TextEditingController c, FocusNode fn, String hint,
+    Widget input(TextEditingController c, FocusNode fn, String label,
             TextEditingController o, FocusNode ofn) =>
-        SizedBox(
-          width: 96,
+        Expanded(
           child: TextField(
             controller: c,
             focusNode: fn,
@@ -210,7 +209,7 @@ class _BalootPageState extends State<BalootPage> {
             onChanged: (v) {
               if (v.length >= 2 && o.text.isEmpty) ofn.requestFocus();
             },
-            decoration: InputDecoration(hintText: hint),
+            decoration: InputDecoration(labelText: label, hintText: '0'),
           ),
         );
     return Scaffold(
@@ -238,18 +237,26 @@ class _BalootPageState extends State<BalootPage> {
               ),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 input(_ia, _fa, _n[0], _ib, _fb),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                      shape: const CircleBorder(),
-                      fixedSize: const Size(96, 96)),
-                  onPressed: () => _addRound(_int(_ia.text), _int(_ib.text)),
-                  child: const Text('احسب',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 88,
+                  height: 88,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        fixedSize: const Size(88, 88)),
+                    onPressed: () => _addRound(_int(_ia.text), _int(_ib.text)),
+                    child: const Text('سجل',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w700)),
+                  ),
                 ),
+                const SizedBox(width: 12),
                 input(_ib, _fb, _n[1], _ia, _fa),
               ],
             ),

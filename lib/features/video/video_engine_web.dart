@@ -18,6 +18,9 @@ extension type _Media._(JSObject _) implements JSObject {
   external JSPromise<JSBoolean> save(JSString path, JSString name, JSString mime);
   external JSPromise<JSBoolean> share(JSString path, JSString name, JSString mime);
   external void preview(JSString path, JSString mime);
+  external JSPromise<JSString> persist(JSString path, JSString id);
+  external JSPromise<JSBoolean> restore(JSString path, JSString id);
+  external JSPromise<JSAny?> unpersist(JSString path, JSString id);
 }
 
 extension type _Picked._(JSObject _) implements JSObject {
@@ -110,3 +113,16 @@ Future<bool> webShare(String path, String name, String mime) async =>
     (await _m.share(path.toJS, name.toJS, mime.toJS).toDart).toDart;
 
 void webPreview(String path, String mime) => _m.preview(path.toJS, mime.toJS);
+
+// حفظ دائم لنتائج العمليات (سجل «عملياتي السابقة») في IndexedDB.
+Future<String> persistOutput(String path, String id) async =>
+    (await _m.persist(path.toJS, id.toJS).toDart).toDart;
+
+Future<bool> restoreOutput(String path, String id) async =>
+    (await _m.restore(path.toJS, id.toJS).toDart).toDart;
+
+Future<void> deletePersisted(String path, String id) async {
+  try {
+    await _m.unpersist(path.toJS, id.toJS).toDart;
+  } catch (_) {}
+}

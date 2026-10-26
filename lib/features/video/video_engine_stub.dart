@@ -21,3 +21,8 @@ Future<(String, String)?> webPick(String kind) async => null;
 Future<bool> webSave(String path, String name, String mime) async => false;
 Future<bool> webShare(String path, String name, String mime) async => false;
 void webPreview(String path, String mime) {}
+
+// حفظ دائم لنتائج العمليات (سجل «عملياتي السابقة»).
+Future<String> persistOutput(String path, String id) async => path;
+Future<bool> restoreOutput(String path, String id) async => true;
+Future<void> deletePersisted(String path, String id) async {}
