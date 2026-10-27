@@ -25,6 +25,9 @@ const categories = [
   ToolCategory('text', 'النصوص', 'Text', Icons.text_fields),
   ToolCategory('device', 'الجهاز', 'Device', Icons.phone_android),
   ToolCategory('random', 'عشوائي', 'Random', Icons.casino_outlined),
+  ToolCategory('network', 'الشبكة', 'Network', Icons.network_check),
+  ToolCategory('devtools', 'المطوّر والأمان', 'Dev & Security', Icons.security),
+  ToolCategory('life', 'الحياة اليومية', 'Daily Life', Icons.today_outlined),
 ];
 
 const _iconKeys = <String, IconData>{
