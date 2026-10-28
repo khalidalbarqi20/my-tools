@@ -8,6 +8,7 @@ import '../features/extras/extras_tools.dart';
 import '../features/math/math_tools.dart';
 import '../features/more/more_tools.dart';
 import '../features/devtools/dev_tools.dart';
+import '../features/docs/doc_tools.dart';
 import '../features/life/life_tools.dart';
 import '../features/network/network_tools.dart';
 import '../features/image/image_tools.dart';
@@ -45,6 +46,7 @@ final List<Tool> _baseTools = [
   ...networkTools,
   ...devTools,
   ...lifeTools,
+  ...docTools,
 ];
 
 List<Tool>? _cachedAll;
