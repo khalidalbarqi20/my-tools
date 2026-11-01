@@ -56,3 +56,12 @@ window.mtRemoveBg = async function (pngBytes) {
     URL.revokeObjectURL(url);
   }
 };
+
+// تنزيل النموذج مسبقًا (للعمل بدون إنترنت لاحقًا) دون معالجة أي صورة.
+window.mtBgWarm = async function () {
+  if (!segPromise) {
+    segPromise = loadSegmenter().catch((e) => { segPromise = null; throw e; });
+  }
+  await segPromise;
+  return true;
+};

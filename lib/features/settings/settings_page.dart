@@ -4,7 +4,9 @@ import '../../billing/remove_ads_page.dart';
 import '../../storage/prefs.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../history/history_page.dart';
 import 'color_picker.dart';
+import 'offline_tile.dart';
 
 const _accentPresets = [
   Color(0xFF1E6F5C), Color(0xFF1565C0), Color(0xFF6A1B9A), Color(0xFFC2185B),
@@ -266,6 +268,8 @@ class SettingsPage extends StatelessWidget {
             ),
           ]),
           _Group(title: 'البيانات', children: [
+            const OpsHistoryTile(),
+            const OfflineEnginesTile(),
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text('مسح سجل الاستخدام'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/categories.dart';
 import '../../core/registry.dart';
 import '../../core/tool.dart';
+import '../../core/ios_install_banner.dart';
 import '../../core/tool_tile.dart';
 import '../../storage/prefs.dart';
 import '../../theme/app_theme.dart';
@@ -143,6 +144,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _unsupported() {
+    final list = unsupportedTools;
+    if (list.isEmpty) return const SizedBox.shrink();
+    final t = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Theme(
+        data: t.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          leading: Icon(Icons.info_outline, color: t.colorScheme.onSurfaceVariant),
+          title: Text('أدوات غير متاحة على جهازك (${list.length})',
+              style: t.textTheme.bodyMedium
+                  ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+          children: [
+            for (final e in list)
+              ListTile(
+                dense: true,
+                leading: Icon(e.$1.icon, size: 20),
+                title: Text(e.$1.nameAr),
+                subtitle: Text(e.$2),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _htmlRunnerCard() {
     final t = Theme.of(context);
     final cs = t.colorScheme;
@@ -221,6 +250,7 @@ class _HomePageState extends State<HomePage> {
                   ]),
             ),
           ]),
+          const IosInstallBanner(),
           const SizedBox(height: 20),
           TextField(
             controller: _sc,
@@ -256,6 +286,7 @@ class _HomePageState extends State<HomePage> {
             _section('الأقسام'),
             _grid(),
             _htmlRunnerCard(),
+            _unsupported(),
           ],
         ],
       ),

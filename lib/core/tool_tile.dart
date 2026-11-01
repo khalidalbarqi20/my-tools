@@ -3,10 +3,18 @@ import '../ads/ad_shell.dart';
 import '../ads/ads.dart';
 import '../storage/prefs.dart';
 import '../theme/app_theme.dart';
+import 'platform_now.dart';
 import 'tool.dart';
 
 void openTool(BuildContext context, Tool tool) {
   Prefs.addRecent(tool.id);
+  final caution = toolCaution(tool.id);
+  if (caution != null) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+          content: Text(caution), duration: const Duration(seconds: 7)));
+  }
   Navigator.push(
     context,
     MaterialPageRoute(

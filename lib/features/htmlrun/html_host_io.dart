@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -40,23 +41,53 @@ Future<HtmlApp?> hostAdd() async {
   final f = files.first;
   final p = f.path;
   if (p == null) throw const FormatException('تعذر الوصول إلى الملف');
-  final name = f.name;
-  final low = name.toLowerCase();
+  final low = f.name.toLowerCase();
   final zip = low.endsWith('.zip');
   if (!zip && !low.endsWith('.html') && !low.endsWith('.htm')) {
     throw const FormatException('اختر ملف HTML أو مشروع ZIP.');
   }
+  return _install(f.name, p, zip);
+}
+
+Future<HtmlApp?> hostAddBytes(String name, Uint8List bytes, {required bool zip}) async {
+  final tmp = File('${Directory.systemTemp.path}/mt_in_${DateTime.now().microsecondsSinceEpoch}.${zip ? 'zip' : 'html'}');
+  await tmp.writeAsBytes(bytes);
+  try {
+    return await _install(name, tmp.path, zip);
+  } finally {
+    try {
+      await tmp.delete();
+    } catch (_) {}
+  }
+}
+
+Future<Uint8List?> hostReadBytes(String id) async {
+  try {
+    final src = File('${_root().path}/$id.src');
+    if (await src.exists()) return await src.readAsBytes();
+    final all = await _readAll();
+    for (final a in all) {
+      if (a.id == id && !a.zip) {
+        return await File('${_root().path}/$id/${a.entry}').readAsBytes();
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+Future<HtmlApp> _install(String name, String path, bool zip) async {
   final id = DateTime.now().microsecondsSinceEpoch.toString();
   final dir = Directory('${_root().path}/$id');
   await dir.create(recursive: true);
   String entry;
   try {
     if (zip) {
-      entry = await extractZip(File(p), dir);
+      entry = await extractZip(File(path), dir);
     } else {
       entry = 'index.html';
-      await File(p).copy('${dir.path}/index.html');
+      await File(path).copy('${dir.path}/index.html');
     }
+    await File(path).copy('${_root().path}/$id.src');
   } catch (_) {
     try {
       await dir.delete(recursive: true);
@@ -78,6 +109,9 @@ Future<HtmlApp?> hostAdd() async {
 Future<void> hostDelete(String id) async {
   try {
     await Directory('${_root().path}/$id').delete(recursive: true);
+  } catch (_) {}
+  try {
+    await File('${_root().path}/$id.src').delete();
   } catch (_) {}
   final all = await _readAll();
   await _writeAll([for (final a in all) if (a.id != id) a]);

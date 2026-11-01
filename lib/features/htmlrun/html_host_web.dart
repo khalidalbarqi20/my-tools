@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+import 'dart:typed_data';
 import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'html_model.dart';
@@ -10,6 +11,8 @@ bool get hostSupported => globalContext.has('mtHtml');
 extension type _Html._(JSObject _) implements JSObject {
   external JSPromise<JSString> listJson();
   external JSPromise<JSString?> add();
+  external JSPromise<JSString> addBytes(JSString name, JSUint8Array bytes, JSBoolean zip);
+  external JSPromise<JSUint8Array?> readBytes(JSString id);
   external JSPromise<JSAny?> del(JSString id);
   external JSObject view(JSString id);
   external void release(JSObject el);
@@ -40,6 +43,24 @@ Future<HtmlApp?> hostAdd() async {
     return HtmlApp.fromJson(jsonDecode(r.toDart) as Map<String, dynamic>);
   } catch (e) {
     throw FormatException(_msg(e));
+  }
+}
+
+Future<HtmlApp?> hostAddBytes(String name, Uint8List bytes, {required bool zip}) async {
+  try {
+    final r = await _h.addBytes(name.toJS, bytes.toJS, zip.toJS).toDart;
+    return HtmlApp.fromJson(jsonDecode(r.toDart) as Map<String, dynamic>);
+  } catch (e) {
+    throw FormatException(_msg(e));
+  }
+}
+
+Future<Uint8List?> hostReadBytes(String id) async {
+  try {
+    final r = await _h.readBytes(id.toJS).toDart;
+    return r?.toDart;
+  } catch (_) {
+    return null;
   }
 }
 

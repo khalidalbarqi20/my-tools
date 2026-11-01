@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/platform_info.dart';
 import '../../storage/ops_history.dart';
 import '../pdf/pdf_common.dart' show baseName, friendlyError, humanSize;
 import '../pdf/single_pdf_tool.dart' show Opt, buildOptField;
@@ -110,6 +111,17 @@ class _MediaToolPageState extends State<MediaToolPage> {
         throw const FormatException('هذا الملف لا يحتوي على فيديو.');
       }
       final size = await fileSize(p);
+      if (kIsWeb) {
+        final mb = size / (1024 * 1024);
+        if (isIosWeb && mb > 300) {
+          throw FormatException(
+              'الملف كبير (${mb.round()} ميجابايت) وذاكرة Safari على الآيفون لا تتحمّله. جرّب مقطعًا أقصر أو أقل من ٣٠٠ ميجابايت، أو استخدم تطبيق الأندرويد.');
+        }
+        if (mb > 1500) {
+          throw FormatException(
+              'الملف كبير جدًا للمتصفح (${mb.round()} ميجابايت). استخدم تطبيق الأندرويد للملفات الكبيرة.');
+        }
+      }
       await _clearOut();
       if (!mounted) return;
       setState(() {
