@@ -437,9 +437,33 @@ async function unpersist(path, id) {
   await tx('hist', 'readwrite', (s) => s.delete(id));
 }
 
+async function deflateRaw(u8) {
+  const s = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function inflateRaw(u8) {
+  const s = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+
+// تنزيل المحركات الثقيلة مسبقًا ليحفظها المتصفح (الـ service worker يخزّن ملفات الموقع تلقائيًا).
+async function prefetch(withModel) {
+  const base = new URL('ffmpeg/', import.meta.url).href;
+  const urls = [base + 'ffmpeg-core.js', base + 'ffmpeg-core.wasm'];
+  let ok = 0;
+  for (const u of urls) {
+    const r = await fetch(u, { cache: 'reload' });
+    if (!r.ok) throw new Error('تعذر تنزيل ' + u.split('/').pop());
+    await r.arrayBuffer();
+    ok++;
+  }
+  if (withModel && window.mtBgWarm) await window.mtBgWarm();
+  return ok;
+}
+
 window.mtMedia = {
   run, cancel, probe, pick, put, read, size, del, save, share, preview,
-  makePlayer, releasePlayer, persist, restore, unpersist,
+  makePlayer, releasePlayer, persist, restore, unpersist, prefetch, deflateRaw, inflateRaw,
 };
 
 // ───────────── تشغيل صفحة HTML / مشروع ZIP ─────────────
@@ -598,6 +622,18 @@ function pickHtml() {
   });
 }
 
+async function saveHtmlBlob(fileName, blob, zip) {
+  if (zip) {
+    const m = await unzip(blob);
+    if (!findEntry([...m.keys()])) throw new Error('لا يوجد ملف HTML داخل ZIP.');
+  }
+  const id = String(Date.now()) + String(++seq);
+  const meta = { id, name: fileName.replace(/\.(html?|zip)$/i, ''), zip, ts: Date.now() };
+  await tx('html_blob', 'readwrite', (s) => s.put(blob, id));
+  await tx('html_meta', 'readwrite', (s) => s.put(meta, id));
+  return JSON.stringify(meta);
+}
+
 window.mtHtml = {
   async listJson() {
     const all = await tx('html_meta', 'readonly', (s) => s.getAll());
@@ -609,15 +645,15 @@ window.mtHtml = {
     const low = f.name.toLowerCase();
     const zip = low.endsWith('.zip');
     if (!zip && !/\.html?$/.test(low)) throw new Error('اختر ملف HTML أو مشروع ZIP.');
-    if (zip) {
-      const m = await unzip(f);
-      if (!findEntry([...m.keys()])) throw new Error('لا يوجد ملف HTML داخل ZIP.');
-    }
-    const id = String(Date.now()) + String(++seq);
-    const meta = { id, name: f.name.replace(/\.(html?|zip)$/i, ''), zip, ts: Date.now() };
-    await tx('html_blob', 'readwrite', (s) => s.put(f, id));
-    await tx('html_meta', 'readwrite', (s) => s.put(meta, id));
-    return JSON.stringify(meta);
+    return saveHtmlBlob(f.name, f, zip);
+  },
+  async addBytes(name, bytes, zip) {
+    const blob = new Blob([bytes], { type: zip ? 'application/zip' : 'text/html' });
+    return saveHtmlBlob(name, blob, zip);
+  },
+  async readBytes(id) {
+    const b = await tx('html_blob', 'readonly', (s) => s.get(id));
+    return b ? new Uint8Array(await b.arrayBuffer()) : null;
   },
   async del(id) {
     await tx('html_blob', 'readwrite', (s) => s.delete(id));
